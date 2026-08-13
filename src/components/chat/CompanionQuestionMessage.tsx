@@ -7,20 +7,17 @@ import { useExperimentStore } from "@/lib/store";
 import { companionConfirmLabel } from "@/data/dialogue";
 import type { CompanionQuestionPayload } from "@/types";
 
-// AI-led's only upfront question — single-select (unlike the old multi-tag
-// picker this replaced), asked once for the whole condition.
+// Every condition's opening question — single-select, asked once right
+// after the scenario prompt (see lib/store.ts's beginExploration). Once
+// answered, the pick shows up as its own real user chat bubble (see
+// confirmCompanion) rather than a pill here, so this renders nothing once
+// confirmed — just hides its own buttons.
 export function CompanionQuestionMessage({ payload }: { payload: CompanionQuestionPayload }) {
   const confirmCompanion = useExperimentStore((s) => s.confirmCompanion);
   const [selected, setSelected] = useState(payload.selected);
 
   if (payload.confirmed) {
-    return (
-      <div className="mt-2">
-        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-          {payload.selected}
-        </span>
-      </div>
-    );
+    return null;
   }
 
   return (

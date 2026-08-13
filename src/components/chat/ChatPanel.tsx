@@ -25,8 +25,7 @@ export function ChatPanel() {
           <Sparkles className="h-3.5 w-3.5" />
         </div>
         <div>
-          <p className="text-sm font-semibold leading-none">여행 플래너 AI</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">AI 어시스턴트 (시뮬레이션)</p>
+          <p className="text-sm font-semibold leading-none">AI 여행 플래너</p>
         </div>
       </div>
 

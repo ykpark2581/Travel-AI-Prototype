@@ -22,7 +22,11 @@ export function IntroductionScreen() {
         ))}
       </ul>
 
-      <p className="mt-6 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
+      {/* Deliberately a different visual treatment from the bullet list
+          above (bordered callout, bold, centered) — a mindset instruction,
+          not another fact about the study's structure, so it shouldn't
+          blend in as a 4th bullet. */}
+      <p className="mt-6 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-center text-sm font-bold text-foreground">
         {introductionContent.note}
       </p>
 

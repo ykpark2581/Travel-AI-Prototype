@@ -1,52 +1,36 @@
 "use client";
 
-import { Stepper } from "@/components/layout/Stepper";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { BrowserWorkspace } from "@/components/workspace/BrowserWorkspace";
-import { useExperimentStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import { ConditionCompleteDialog } from "@/components/flow/ConditionCompleteDialog";
 
+// Workspace (left) and chat (right) both render unconditionally, for every
+// condition and every stage — including flights/hotels search and AI-led's
+// activities/restaurants (see BrowserWorkspace's AiWorkingPanel fallback
+// for what the workspace shows when there's no interactive catalog for
+// this particular stage/condition). Condition differences belong entirely
+// to *what* the exploration process looks like, never to whether either
+// column exists at all. No top progress/stepper bar — the explore →
+// itinerary progression is just two stages and reads clearly enough from
+// the chat + workspace content alone.
 export function PrototypeShell() {
-  const activeStage = useExperimentStore((s) => s.activeStage);
-  const condition = useExperimentStore((s) => s.condition);
-  const mixedAnalysisActive = useExperimentStore((s) => s.mixedAnalysisActive);
-
-  // The browser workspace only mounts where there's actually something to
-  // browse: Human/Mixed's activities/restaurants catalogs, and the final
-  // itinerary for every condition. Flights/hotels are chat-only for
-  // everyone (see store.ts's startFlightsHotelsSummary), and AI-led never
-  // browses at all — its activities/restaurants results are chat cards too
-  // (see runAiLedFlow). The chat panel takes the full layout on its own
-  // whenever there's no workspace to show.
-  //
-  // Mixed-led shows the workspace during free browsing (same as human), but
-  // hides it again once its analysis timer fires and the AI starts
-  // narrating its inferred style in chat (see runMixedAnalysis) — mirrors
-  // AI-led's chat-only result reveal for that window without needing a
-  // separate stage.
-  const showWorkspace =
-    activeStage === "itinerary" ||
-    ((activeStage === "activities" || activeStage === "restaurants") &&
-      (condition === "human" || (condition === "mixed" && !mixedAnalysisActive)));
-
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-muted/30">
-      <Stepper />
+      {/* Never stacked, down to tablet width — participants need to see
+          both at once. What shrinks instead is the chat column's width
+          and, inside the workspace, the card grid (which responds to its
+          own column width via container queries — see ExplorePanel —
+          rather than the viewport, since that column is narrower than the
+          viewport whenever chat sits next to it). */}
       <div className="flex min-h-0 flex-1">
-        <div
-          className={cn(
-            "flex min-w-[320px] flex-col border-r bg-background",
-            showWorkspace ? "w-full max-w-[480px] lg:w-[30%]" : "mx-auto w-full max-w-2xl"
-          )}
-        >
+        <div className="flex min-h-0 flex-1 flex-col p-3">
+          <BrowserWorkspace />
+        </div>
+        <div className="flex min-w-[280px] w-full max-w-[480px] flex-col border-l bg-background lg:w-[30%]">
           <ChatPanel />
         </div>
-        {showWorkspace && (
-          <div className="flex flex-1 flex-col p-3">
-            <BrowserWorkspace />
-          </div>
-        )}
       </div>
+      <ConditionCompleteDialog />
     </div>
   );
 }

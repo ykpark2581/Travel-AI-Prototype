@@ -27,10 +27,9 @@ export function QuestionnaireScreen() {
   const handleSubmit = async () => {
     setSubmitting(true);
     const payload: FinalSurveyPayload = {
-      type: "final",
-      pid: participantId,
+      kind: "final",
+      participantCode: participantId,
       timestamp: new Date().toISOString(),
-      block: "final",
       conditionOrder: conditionOrder.join("-"),
       answers,
     };

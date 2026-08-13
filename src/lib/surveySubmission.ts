@@ -1,8 +1,8 @@
 // Sends each survey submission (3 per-condition + 1 final, per participant)
 // to our own /api/survey route, which forwards it server-side to a Google
-// Sheets webhook (Apps Script Web App) — see docs/SURVEY_SETUP.md. Going
-// through our own route avoids browser CORS entirely and lets us read a
-// real success/failure status, unlike calling Apps Script directly from the
+// Form's response endpoint (see docs/SURVEY_SETUP.md). Going through our
+// own route avoids browser CORS entirely and lets us read a real
+// success/failure status, unlike posting to the form directly from the
 // client.
 //
 // Network calls in a remote/unmoderated study can fail transiently, and
@@ -12,28 +12,52 @@
 // browser (which self-heals every case except the very last submission of
 // the whole study failing with no further submission to piggyback on).
 
+// `kind` is this payload's own TS discriminant — distinct from the sheet's
+// "type" column (see api/survey/route.ts), which holds the condition code
+// ("human"/"mixed"/"ai") for condition rows and the literal "final" for the
+// final row.
 export interface ConditionSurveyPayload {
-  type: "condition";
-  pid: string;
+  kind: "condition";
+  participantCode: string; // anonymous auto-generated code — see store.ts's participantId
   timestamp: string;
-  block: number; // 1-indexed position among this participant's 3 conditions
-  condition: string; // internal condition code — never shown to the participant, only for researcher analysis
+  condition: string; // internal condition code — never shown to the participant, becomes the sheet's `type` column
   destination: string;
+  // Kept for order-effect analysis, appended after the columns actually
+  // requested for the sheet (ParticipantName/timestamp/type/destination/
+  // Q1../Final_satisfaction*) — see docs/SURVEY_SETUP.md.
+  block: number; // 1-indexed position among this participant's 3 conditions
   likedActivityCount: number;
   likedRestaurantCount: number;
+  // Keyed by data/questionnaire.ts's conditionSurveyItems ids (mc1..dv8) —
+  // mapped to individual Q1..Q8 sheet columns by that array's fixed order
+  // (see api/survey/route.ts), not sent as one JSON blob.
   answers: Record<string, string>;
 }
 
 export interface FinalSurveyPayload {
-  type: "final";
-  pid: string;
+  kind: "final";
+  participantCode: string; // anonymous auto-generated code — see store.ts's participantId
   timestamp: string;
-  block: "final";
-  conditionOrder: string; // e.g. "mixed-human-ai"
+  conditionOrder: string; // e.g. "mixed-human-ai" — order-effect analysis, appended column
+  // Keyed by data/questionnaire.ts's finalSurveyItems ids (fs1/fs2) —
+  // mapped to Final_satisfaction/Final_satisfaction_reason.
   answers: Record<string, string>;
 }
 
-export type SurveyPayload = ConditionSurveyPayload | FinalSurveyPayload;
+// Submitted once, before the first condition (see PreSurveyScreen.tsx) —
+// its own row (type="presurvey" — no destination/block, same as the final
+// row) in the SAME sheet as everything else rather than a separate form.
+export interface PreSurveyPayload {
+  kind: "presurvey";
+  participantCode: string; // anonymous auto-generated code — see store.ts's participantId
+  timestamp: string;
+  // Keyed by data/questionnaire.ts's preSurveyItems ids — mapped to Q1..Q8
+  // by that array's fixed order (see api/survey/route.ts), same pattern as
+  // ConditionSurveyPayload's answers above.
+  answers: Record<string, string>;
+}
+
+export type SurveyPayload = ConditionSurveyPayload | FinalSurveyPayload | PreSurveyPayload;
 
 const QUEUE_KEY = "survey-submission-queue";
 const RETRY_ATTEMPTS = 2;

@@ -16,7 +16,6 @@ export function ConditionSurveyScreen() {
   const participantId = useExperimentStore((s) => s.participantId);
   const conditionIndex = useExperimentStore((s) => s.conditionIndex);
   const condition = useExperimentStore((s) => s.condition);
-  const conditionOrder = useExperimentStore((s) => s.conditionOrder);
   const destinationName = useExperimentStore((s) => s.destinationBundle.meta.name);
   const likedActivityCount = useExperimentStore((s) => s.likedActivityIds.length);
   const likedRestaurantCount = useExperimentStore((s) => s.likedRestaurantIds.length);
@@ -31,8 +30,8 @@ export function ConditionSurveyScreen() {
   const handleSubmit = async () => {
     setSubmitting(true);
     const payload: ConditionSurveyPayload = {
-      type: "condition",
-      pid: participantId,
+      kind: "condition",
+      participantCode: participantId,
       timestamp: new Date().toISOString(),
       block,
       condition,
@@ -47,8 +46,7 @@ export function ConditionSurveyScreen() {
 
   return (
     <FullScreenCard className="max-w-2xl">
-      <p className="text-xs font-medium text-muted-foreground">간단한 설문 ({block}/{conditionOrder.length})</p>
-      <h1 className="mt-1 text-xl font-semibold">방금 진행하신 여행 계획 과정에 대해 여쭤볼게요</h1>
+      <h1 className="text-xl font-semibold">방금 진행하신 여행 계획 과정에 대해 여쭤볼게요</h1>
       <p className="mt-2 text-sm text-muted-foreground">방금 경험을 떠올리며 답변해 주세요.</p>
 
       <div className="mt-8">
