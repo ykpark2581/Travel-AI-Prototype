@@ -6,11 +6,36 @@
 
 export const STAGE_SKELETON_MS = 800;
 
-// Gap between one AI chat bubble and the next (see lib/store.ts's
-// sendAiMessage) — a fixed 3s, with components/chat/TypingIndicator.tsx's
-// "..." animation filling the wait in the next bubble's spot, so
-// consecutive AI messages never just snap in back-to-back.
+// The floor under readingDelayMs below — also what sendAiMessage falls
+// back to when there's no previous message to size a reading pause off of
+// (the very first bubble of a condition). Originally this alone WAS the
+// gap between every AI chat bubble and the next, a flat 3s regardless of
+// message length; readingDelayMs replaced that per-message flat gap
+// app-wide (see lib/store.ts's sendAiMessage), but the name/value stays
+// here since it's still the universal minimum.
 export const CHAT_REPLY_DELAY_MS_RANGE: [number, number] = [3000, 3000];
+
+// How long to pause before the NEXT AI bubble, sized to how long `text`
+// (whatever currently sits last in the transcript) takes to actually read —
+// see lib/store.ts's sendAiMessage, which uses this as its default `delayMs`
+// for every AI message app-wide, not just checklists. A one-line message and
+// a 3-sentence intro (e.g. flightsHotelsCollectingIntro/
+// aiLedFlightsHotelsIntro, "네, ~ 계획해볼게요... 우선 항공편과 숙소부터
+// 찾아보겠습니다.") used to get the identical flat pause before whatever
+// came next — long intros were consistently getting swallowed by "사이트
+// 탐색 중" (or the next chat bubble) popping up right as the participant was
+// still reading them. ~12 Korean characters/second is a comfortable,
+// unhurried reading pace (not scanning speed). Never shorter than
+// CHAT_REPLY_DELAY_MS_RANGE (so short messages/user-echoed answers aren't
+// sped up), capped so one very long message can't stall the flow
+// indefinitely.
+const READING_CHARS_PER_SEC = 12;
+const READING_DELAY_MS_MAX = 9000;
+export function readingDelayMs(text: string): number {
+  const chars = text.replace(/\s+/g, "").length;
+  const estimated = (chars / READING_CHARS_PER_SEC) * 1000;
+  return Math.min(READING_DELAY_MS_MAX, Math.max(CHAT_REPLY_DELAY_MS_RANGE[0], estimated));
+}
 
 // How long each checklist item holds before the next one reveals (see
 // lib/store.ts's runChecklist) — 2s per line ("hotely.com 사이트 탐색

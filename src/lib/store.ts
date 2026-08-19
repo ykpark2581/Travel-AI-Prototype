@@ -27,10 +27,9 @@ import {
   AUTOPLAY_DETAIL_MS,
   AUTOPLAY_SKIM_MS,
   AUTOPLAY_STEP_GAP_MS,
-  CHAT_REPLY_DELAY_MS_RANGE,
   CHECKLIST_ITEM_MS,
   MIN_PROCESSING_MS,
-  randomInRange,
+  readingDelayMs,
   STAGE_SKELETON_MS,
 } from "@/lib/constants";
 
@@ -343,9 +342,20 @@ interface ExperimentState {
 }
 
 export const useExperimentStore = create<ExperimentState>((set, get) => {
+  // `delayMs`, when omitted, is no longer the flat CHAT_REPLY_DELAY_MS_RANGE
+  // for every message alike — it defaults to readingDelayMs() of whatever
+  // message currently sits last in the transcript (the thing actually on
+  // screen for the participant to read right now), so a short line and a
+  // long multi-sentence one don't get the same pause before this new
+  // message lands. A short/absent previous message (nothing to read, or
+  // just a brief user-echo like a tag pick) naturally floors back to the
+  // original fixed delay — see readingDelayMs. An explicit `delayMs` still
+  // overrides this entirely for call sites that need a specific timing
+  // (e.g. runChecklist's own per-item pacing doesn't go through here).
   function sendAiMessage(text: string, after?: () => void, extra?: Partial<ChatMessage>, delayMs?: number) {
     set({ isTyping: true });
-    const delay = delayMs ?? randomInRange(CHAT_REPLY_DELAY_MS_RANGE);
+    const previousText = get().messages.at(-1)?.text ?? "";
+    const delay = delayMs ?? readingDelayMs(previousText);
     setTimeout(() => {
       set((state) => ({
         messages: [...state.messages, { id: makeId(), role: "assistant", text, ...extra }],
@@ -515,7 +525,9 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // Posts the "" + checklist-payload message, then progressively reveals its
   // items before calling onDone — the whole card stays visible for at least
   // MIN_PROCESSING_MS from the moment it appears (see runChecklist), even
-  // if the items themselves reveal faster than that.
+  // if the items themselves reveal faster than that. Its own appearance is
+  // already paced off whatever message precedes it (see sendAiMessage's
+  // default readingDelayMs behavior) — no explicit delay needed here.
   function postChecklist(items: string[], onDone: () => void) {
     const checklistId = makeId();
     sendAiMessage(
