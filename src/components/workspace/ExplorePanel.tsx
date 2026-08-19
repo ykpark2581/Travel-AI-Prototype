@@ -26,11 +26,11 @@ import type { ExplorationStage } from "@/types";
 // (see exploreTab) — human-led/mixed-led switch it via a workspace click
 // OR the chat's own "액티비티 완료" button (see lib/store.ts's
 // confirmActivityStage), AI-led's autoplay drives it directly, no local
-// tab state here at all anymore. Mixed-led's 식당 tab is also genuinely
-// disabled (not just unclicked) until that button is pressed (see
-// restaurantTabLocked below) — human-led's own two tabs stay always
-// switchable. Condition differences otherwise live in
-// the cards themselves (see ActivityCard/RestaurantCard's
+// tab state here at all anymore. Both human-led's and mixed-led's 식당 tab
+// are also genuinely disabled (not just unclicked) until that button is
+// pressed (see restaurantTabLocked below) — human-led re-checks this fresh
+// every one of its 4 days, mixed-led only once. Condition differences
+// otherwise live in the cards themselves (see ActivityCard/RestaurantCard's
 // showSelectButton/showInterestButtons — human-led picks day by day,
 // mixed-led marks 👍/👎) and whether the whole panel is interactive at
 // all (isAiAutoplay below strips out FilterBar, tab clicks, and every card
@@ -53,6 +53,17 @@ export function ExplorePanel({ loading }: { loading: boolean }) {
   const autoplayStatusText = useExperimentStore((s) => s.autoplayStatusText);
   const autoplaySkimming = useExperimentStore((s) => s.autoplaySkimming);
   const mixedRestaurantTabUnlocked = useExperimentStore((s) => s.mixedRestaurantTabUnlocked);
+  // Human-led's own per-day equivalent of mixedRestaurantTabUnlocked — a
+  // single persistent boolean like that one wouldn't work here, since
+  // human-led re-runs this same 액티비티→식당 gate fresh on every one of
+  // its 4 days (see confirmDaySelection), not just once. Reads straight off
+  // the current day's chat prompt (see DaySelectionMessage.tsx, which
+  // renders from this exact same field) rather than tracking a second copy
+  // of it in a dedicated store field that would need its own reset every
+  // time humanDayIndex advances.
+  const humanActivityStageConfirmed = useExperimentStore(
+    (s) => s.messages.find((m) => m.daySelection?.day === s.humanDayIndex)?.daySelection?.activityStageConfirmed ?? false
+  );
 
   // AI-led only — the participant never drives this panel at all (see
   // runAiAutoplay); everything below that branches on this strips out
@@ -60,11 +71,14 @@ export function ExplorePanel({ loading }: { loading: boolean }) {
   // just visually de-emphasizing them, since "지켜만 볼 수 있음" means
   // exactly that.
   const isAiAutoplay = condition === "ai";
-  // Mixed-led only — 식당 starts genuinely disabled (see
-  // mixedRestaurantTabUnlocked's own comment), not just unclicked, until
-  // "액티비티 완료" is pressed. Human-led's tabs are always both freely
-  // switchable, so this only ever applies for mixed.
-  const restaurantTabLocked = condition === "mixed" && !mixedRestaurantTabUnlocked;
+  // 식당 starts genuinely disabled (not just unclicked) for both human-led
+  // and mixed-led until "액티비티 완료" is pressed — otherwise either
+  // could jump straight to picking restaurants (or, for human-led, a later
+  // day's restaurants) without ever having chosen an activity, which the
+  // chat's own two-stage button was supposed to prevent but the workspace
+  // tab click alone bypassed entirely.
+  const restaurantTabLocked =
+    (condition === "mixed" && !mixedRestaurantTabUnlocked) || (condition === "human" && !humanActivityStageConfirmed);
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -220,9 +234,9 @@ export function ExplorePanel({ loading }: { loading: boolean }) {
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
             isAiAutoplay && "cursor-default hover:text-muted-foreground",
-            // Locked (mixed-led, pre-"액티비티 완료") reads as clearly
-            // unavailable but not alarming — a lighter/washed-out label
-            // rather than a stronger warning treatment, since this isn't an
+            // Locked (pre-"액티비티 완료") reads as clearly unavailable but
+            // not alarming — a lighter/washed-out label rather than a
+            // stronger warning treatment, since this isn't an
             // error state, just "not yet."
             restaurantTabLocked && "cursor-not-allowed text-muted-foreground/40 hover:text-muted-foreground/40"
           )}

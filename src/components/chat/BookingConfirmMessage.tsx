@@ -16,10 +16,8 @@ export function BookingConfirmMessage({ payload }: { payload: BookingConfirmPayl
   if (payload.confirmed) return null;
 
   return (
-    <div className="mt-3">
-      <Button size="sm" onClick={() => confirmFinalPlan()}>
-        {bookingConfirmLabel}
-      </Button>
-    </div>
+    <Button size="sm" onClick={() => confirmFinalPlan()}>
+      {bookingConfirmLabel}
+    </Button>
   );
 }

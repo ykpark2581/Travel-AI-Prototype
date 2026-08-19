@@ -33,7 +33,7 @@ export function MixedExploreDoneMessage({ payload }: { payload: MixedExploreDone
   if (!payload.activityStageConfirmed) {
     const ready = interestActivityCount >= 2;
     return (
-      <div className="mt-3 space-y-1.5">
+      <div className="space-y-1.5">
         <Button size="sm" disabled={!ready} onClick={() => confirmActivityStage()}>
           {activityStageConfirmLabel}
         </Button>

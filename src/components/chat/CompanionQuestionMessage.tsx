@@ -21,7 +21,7 @@ export function CompanionQuestionMessage({ payload }: { payload: CompanionQuesti
   }
 
   return (
-    <div className="mt-3 space-y-3">
+    <div className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
         {payload.options.map((option) => {
           const isSelected = selected === option;

@@ -35,7 +35,7 @@ export function DaySelectionMessage({ payload }: { payload: DaySelectionPayload 
   if (!payload.activityStageConfirmed) {
     const ready = activityCount >= 2;
     return (
-      <div className="mt-3 space-y-1.5">
+      <div className="space-y-1.5">
         <Button size="sm" disabled={!ready} onClick={() => confirmActivityStage()}>
           {activityStageConfirmLabel}
         </Button>

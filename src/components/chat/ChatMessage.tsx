@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,6 +10,7 @@ import { DaySelectionMessage } from "@/components/chat/DaySelectionMessage";
 import { MixedExploreDoneMessage } from "@/components/chat/MixedExploreDoneMessage";
 import { BookingConfirmMessage } from "@/components/chat/BookingConfirmMessage";
 import { ChecklistCard } from "@/components/chat/ChecklistCard";
+import { TypewriterText } from "@/components/chat/TypewriterText";
 import type { ChatMessage as ChatMessageType } from "@/types";
 
 // Lightweight, safe-by-construction bold markup for AI message text —
@@ -24,8 +26,24 @@ function renderMessageText(text: string) {
   );
 }
 
-export function ChatMessage({ message }: { message: ChatMessageType }) {
+export function ChatMessage({ message, isFirst = false }: { message: ChatMessageType; isFirst?: boolean }) {
   const isUser = message.role === "user";
+
+  // Only AI replies type themselves out (see TypewriterText) — a user-role
+  // bubble represents something the participant already said/picked, so it
+  // appears immediately, same as any chat app's own outgoing messages. The
+  // very first message (the AI's opening greeting, see ChatPanel's
+  // `isFirst` prop) is exempted too and shows fully formed right away — the
+  // participant lands on the screen with nothing else happening yet, so
+  // there's no "still composing" beat before it to make typing it out read
+  // as natural rather than a stray leftover animation. Starts true for
+  // those plus empty-text AI bubbles (nothing to type) so any attached
+  // interactive payload below shows right away instead of waiting on a
+  // typing effect that never runs. Declared before the checklist
+  // early-return below so this hook always runs in the same order
+  // regardless of message kind (rules-of-hooks) — checklist messages just
+  // never end up reading it.
+  const [typingDone, setTypingDone] = useState(isUser || isFirst || !message.text);
 
   // Checklist messages ("hotely.com 사이트 탐색 중" etc.) are a distinct
   // "AI is processing" beat, not a normal reply — they render as their own
@@ -34,6 +52,24 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
   if (message.checklist) {
     return <ChecklistCard payload={message.checklist} />;
   }
+
+  // Each of these sub-components renders null once its own `confirmed` flag
+  // flips (the pick's already echoed as a real user bubble by then — see
+  // e.g. confirmCompanion in store.ts). Checked here too, not just inside
+  // each sub-component, so the bubble WRAPPING it below (background,
+  // padding) also disappears instead of lingering as an empty rounded box.
+  const payload =
+    message.companionQuestion && !message.companionQuestion.confirmed ? (
+      <CompanionQuestionMessage payload={message.companionQuestion} />
+    ) : message.styleQuestion && !message.styleQuestion.confirmed ? (
+      <StyleQuestionMessage payload={message.styleQuestion} />
+    ) : message.daySelection && !message.daySelection.confirmed ? (
+      <DaySelectionMessage payload={message.daySelection} />
+    ) : message.mixedExploreDone && !message.mixedExploreDone.confirmed ? (
+      <MixedExploreDoneMessage payload={message.mixedExploreDone} />
+    ) : message.bookingConfirm && !message.bookingConfirm.confirmed ? (
+      <BookingConfirmMessage payload={message.bookingConfirm} />
+    ) : null;
 
   return (
     <motion.div
@@ -48,20 +84,41 @@ export function ChatMessage({ message }: { message: ChatMessageType }) {
           <Sparkles className="h-3.5 w-3.5" />
         </div>
       )}
-      <div
-        className={cn(
-          "max-w-[80%] whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-          isUser
-            ? "rounded-br-sm bg-primary text-primary-foreground"
-            : "rounded-bl-sm bg-muted text-foreground"
+      {/* max-w-[80%] moves to this wrapper (not the bubble itself) now that a
+          message can render as two stacked bubbles — items-start/items-end
+          keeps each bubble sized to its own content instead of stretching to
+          fill the column, same "hugs its text" look the single bubble had
+          before. */}
+      <div className={cn("flex max-w-[80%] flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
+        <div
+          className={cn(
+            "whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+            isUser
+              ? "rounded-br-sm bg-primary text-primary-foreground"
+              : "rounded-bl-sm bg-muted text-foreground"
+          )}
+        >
+          {isUser || isFirst ? (
+            renderMessageText(message.text)
+          ) : (
+            <TypewriterText text={message.text} onDone={() => setTypingDone(true)} />
+          )}
+        </div>
+        {/* Interactive payloads (question chips, day picker, etc.) wait for the
+            text bubble above to finish typing, then appear as their OWN
+            separate bubble rather than inside the same one — a chip grid or
+            button popping into a bubble that's still mid-type read as the
+            two fighting for the same space at once. */}
+        {typingDone && payload && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-sm text-foreground"
+          >
+            {payload}
+          </motion.div>
         )}
-      >
-        {renderMessageText(message.text)}
-        {message.companionQuestion && <CompanionQuestionMessage payload={message.companionQuestion} />}
-        {message.styleQuestion && <StyleQuestionMessage payload={message.styleQuestion} />}
-        {message.daySelection && <DaySelectionMessage payload={message.daySelection} />}
-        {message.mixedExploreDone && <MixedExploreDoneMessage payload={message.mixedExploreDone} />}
-        {message.bookingConfirm && <BookingConfirmMessage payload={message.bookingConfirm} />}
       </div>
     </motion.div>
   );

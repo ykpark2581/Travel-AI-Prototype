@@ -1002,10 +1002,14 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     // to the 식당 tab and marks whichever pending message's
     // activityStageConfirmed true, without finishing the day/exploration —
     // that's the second stage's job (confirmDaySelection /
-    // finishMixedExploring). Also permanently unlocks mixed-led's 식당 tab
-    // (see mixedRestaurantTabUnlocked) — harmless to set for human-led too
-    // since it never reads that field (both its tabs are already always
-    // freely switchable).
+    // finishMixedExploring). Also sets mixedRestaurantTabUnlocked true —
+    // mixed-led's ExplorePanel reads that directly to unlock its 식당 tab;
+    // human-led's ExplorePanel ignores this field entirely and instead
+    // derives the same "is this day's activity stage done" gate straight
+    // from the daySelection message just updated above (see
+    // ExplorePanel.tsx's humanActivityStageConfirmed), since human-led needs
+    // that check to reset fresh every day rather than stay permanently
+    // unlocked after day 1.
     confirmActivityStage: () =>
       set((state) => ({
         exploreTab: "restaurants",

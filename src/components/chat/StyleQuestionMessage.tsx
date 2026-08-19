@@ -36,7 +36,7 @@ export function StyleQuestionMessage({ payload }: { payload: StyleQuestionPayloa
   };
 
   return (
-    <div className="mt-3 space-y-3">
+    <div className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
         {payload.options.map((tag) => {
           const isSelected = selected.includes(tag);
