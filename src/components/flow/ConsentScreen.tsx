@@ -7,16 +7,22 @@ import { FullScreenCard } from "@/components/flow/FullScreenCard";
 import { consentContent } from "@/data/onboarding";
 import { useExperimentStore } from "@/lib/store";
 
-// consentContent's checkboxes now include one for name/contact-info
-// collection (see data/onboarding.ts) — the copy itself promises that
-// data gets collected for follow-up interview selection, but nothing in
-// this flow actually collects a name or phone number yet (acceptConsent()
-// still only auto-generates the anonymous participant code, see store.ts's
-// ensureParticipantId/makeParticipantCode). Flagging this gap rather than
-// silently building a collection form: where that name/contact step lives
-// (its own field here vs. folded into the pre-survey vs. collected
-// entirely outside the app) is a real design decision for the researcher,
-// not something to guess at.
+// Turns a bare email address inside `text` into a clickable mailto link —
+// e.g. consentContent's "연구자 박윤경 (ykpark@yonsei.ac.kr)" line (see
+// data/onboarding.ts) — without needing a dedicated per-paragraph `email`
+// field the way an earlier version of this content did.
+function linkifyEmail(text: string) {
+  return text.split(/([\w.+-]+@[\w-]+\.[\w.-]+)/g).map((part, i) =>
+    /^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(part) ? (
+      <a key={i} href={`mailto:${part}`} className="text-primary underline underline-offset-2">
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  );
+}
+
 export function ConsentScreen() {
   const [checked, setChecked] = useState<boolean[]>(() => consentContent.checkboxes.map(() => false));
   const acceptConsent = useExperimentStore((s) => s.acceptConsent);
@@ -28,24 +34,16 @@ export function ConsentScreen() {
       <h1 className="text-xl font-semibold">{consentContent.title}</h1>
 
       <div className="mt-6 space-y-4">
-        {consentContent.paragraphs.map((p) => (
-          <div key={p.heading}>
-            <p className="text-sm font-semibold text-foreground">{p.heading}</p>
+        {consentContent.paragraphs.map((p, idx) => (
+          // heading is empty for the opening greeting (see
+          // data/onboarding.ts) — no bold label line for that one.
+          <div key={p.heading || `intro-${idx}`}>
+            {p.heading && <p className="text-sm font-semibold text-foreground">{p.heading}</p>}
             {p.body.map((line, i) => (
               <p key={i} className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {line}
+                {linkifyEmail(line)}
               </p>
             ))}
-            {/* Only the 문의처 paragraph sets this — see its own comment
-                in data/onboarding.ts. */}
-            {"email" in p && p.email && (
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                문의처{"　"}
-                <a href={`mailto:${p.email}`} className="text-primary underline underline-offset-2">
-                  {p.email}
-                </a>
-              </p>
-            )}
           </div>
         ))}
       </div>
