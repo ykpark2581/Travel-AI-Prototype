@@ -80,9 +80,6 @@ export async function POST(request: Request) {
       ai_freq: "preAiFreq",
       ai_travel_freq: "preAiTravelFreq",
       ai_trust: "preAiTrust",
-      interview_consent: "preInterviewConsent",
-      name: "preName",
-      contact: "preContact",
     };
     preSurveyItems.forEach((item) => {
       const entryKey = PRE_SURVEY_ENTRY_KEYS[item.id];
@@ -90,9 +87,18 @@ export async function POST(request: Request) {
     });
   } else {
     // finalSurveyItems is [fs1, fs2] → Final_satisfaction / _reason.
+    // rewardSurveyItems (phone, interview_consent — see
+    // QuestionnaireScreen.tsx's second step) rides along in this same final
+    // row rather than a separate one, reusing the preContact/
+    // preInterviewConsent fields originally reserved for pre-survey's own
+    // now-removed contact/name questions (see data/questionnaire.ts's
+    // preSurveyItems comment and surveyFormFields.ts's own comment on
+    // preInterviewConsent for how that particular field got repurposed).
     const [fs1, fs2] = finalSurveyItems;
     set("finalSatisfaction", answers[fs1.id]);
     set("finalSatisfactionReason", answers[fs2.id]);
+    set("preContact", answers.phone);
+    set("preInterviewConsent", answers.interview_consent);
   }
 
   try {

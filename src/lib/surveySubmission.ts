@@ -39,8 +39,11 @@ export interface FinalSurveyPayload {
   participantCode: string; // anonymous auto-generated code — see store.ts's participantId
   timestamp: string;
   conditionOrder: string; // e.g. "mixed-human-ai" — order-effect analysis, appended column
-  // Keyed by data/questionnaire.ts's finalSurveyItems ids (fs1/fs2) —
-  // mapped to Final_satisfaction/Final_satisfaction_reason.
+  // Keyed by data/questionnaire.ts's finalSurveyItems ids (fs1/fs2, mapped
+  // to Final_satisfaction/Final_satisfaction_reason) PLUS rewardSurveyItems
+  // ids (phone/interview_consent, mapped to the preContact/
+  // preInterviewConsent fields — see api/survey/route.ts) — both steps of
+  // QuestionnaireScreen.tsx submit together as this one combined row.
   answers: Record<string, string>;
 }
 

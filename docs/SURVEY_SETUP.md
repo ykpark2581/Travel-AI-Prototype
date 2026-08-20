@@ -5,23 +5,24 @@
 스프레드시트에 쌓이며, 스프레드시트는 결과적으로 아래와 같은 형태가 됩니다
 (참가자 1명당 5행 — 사전 설문 1행 + 조건 3행 + 최종 1행):
 
-| ParticipantName | timestamp | type | destination | Q1 | … | Q9 | PreGender | PreAge | PreExploreBreadth | PreExploreCompare | PrePlanEarly | PrePlanDetailed | PreAiFreq | PreAiTravelFreq | PreAiTrust | PreInterviewConsent | PreName | PreContact | Final_satisfaction | Final_satisfaction_reason |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| K7QX2M9P | … | presurvey |  |  |  |  | 여성 | 30대 | 5 | 6 | 4 | 3 | 월 1-3회 | 가끔 활용함 | 5 | 예, 참여할 의향이 있습니다. | 홍길동 | 010-1234-5678 |  |  |
-| K7QX2M9P | … | presurvey (다른 참가자, 인터뷰 거절) |  |  |  |  | 남성 | 20대 | 4 | 3 | 5 | 6 | 월 1회 미만 | 전혀 활용하지 않음 | 3 | 아니요. |  |  |  |  |
-| K7QX2M9P | … | mixed | 방콕 | 5 | … | 4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| K7QX2M9P | … | human | 베트남 | 4 | … | 3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| K7QX2M9P | … | ai | 대만 | 6 | … | 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| K7QX2M9P | … | final |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 인간+AI 혼합 유형 | 탐색 과정이 재미있어서... |
+| ParticipantName | timestamp | type | destination | Q1 | … | Q9 | PreGender | PreAge | PreExploreBreadth | PreExploreCompare | PrePlanEarly | PrePlanDetailed | PreAiFreq | PreAiTravelFreq | PreAiTrust | Final_satisfaction | Final_satisfaction_reason | PreContact | PreInterviewConsent |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| K7QX2M9P | … | presurvey |  |  |  |  | 여성 | 30대 | 5 | 6 | 4 | 3 | 월 1-3회 | 가끔 활용함 | 5 |  |  |  |  |
+| K7QX2M9P | … | mixed | 방콕 | 5 | … | 4 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| K7QX2M9P | … | human | 베트남 | 4 | … | 3 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| K7QX2M9P | … | ai | 대만 | 6 | … | 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| K7QX2M9P | … | final |  |  |  |  |  |  |  |  |  |  |  |  |  | 인간+AI 혼합 유형 | 탐색 과정이 재미있어서... | 010-1234-5678 | 예, 참여할 의향이 있습니다. |
 
-> **`PreName`/`PreContact`는 이 프로토타입 전체에서 유일하게 실제 개인식별정보(이름/
-> 연락처)가 들어가는 필드**입니다 — 나머지 모든 데이터(`ParticipantName` 포함)는
-> 처음부터 익명 설계입니다. 게다가 이제는 **`PreInterviewConsent`가 "예, 참여할 의향이
-> 있습니다."일 때만 채워집니다** — "아니요."를 고르거나 응답하지 않은 참가자는 이름/
-> 연락처를 아예 입력하는 화면조차 보지 않으므로 이 두 칸은 항상 비어 있습니다(위 표의
-> 2번째 사전 설문 행 예시 참고). 시트 접근 권한을 연구진으로만 제한하고,
-> `data/onboarding.ts`의 동의서 문구가 약속한 보관 기간(연구 종료 후 3년)이 지나면
-> 삭제해 주세요.
+> **`PreContact`는 이 프로토타입 전체에서 유일하게 실제 개인식별정보(휴대전화 번호)가
+> 들어가는 필드**입니다 — 나머지 모든 데이터(`ParticipantName` 포함)는 처음부터 익명
+> 설계입니다. 사전 설문이 아니라 **최종 설문(`final`) 행에서만** 채워지고, 참여 보상(모바일
+> 상품권) 지급을 위해 **모든 참가자에게 필수**로 받습니다 — `PreInterviewConsent`("예,
+> 참여할 의향이 있습니다."/"아니요.")도 같은 최종 행에서 채워지며, 이건 여전히 선택
+> 응답입니다. 이름을 아예 수집하지 않게 되면서, 예전에 이름을 받던 바로 그 폼 질문을
+> `PreInterviewConsent`로 재활용했습니다(entry ID는 그대로, 질문만 리타이틀) — 별도의
+> "PreName" 필드는 이제 없습니다. 아래 "필요한 작업" 참고. 시트 접근 권한을 연구진으로만
+> 제한하고, `data/onboarding.ts`의 동의서 문구가 약속한 보관 기간(연구 종료 후 3년)이
+> 지나면 삭제해 주세요.
 
 - `ParticipantName`은 이름이 아니라 **참가자가 입력하지 않는, 자동 생성된 8자리 익명
   코드**입니다(예: `K7QX2M9P`) — 동의 화면에 이름/번호를 입력하는 칸 자체가 없어서 실명이
@@ -35,13 +36,11 @@
   mc3(AI주도 조작 점검)은 세 조건 모두에게 동일하게 묻습니다 — 표준적인 조작 점검
   설계상 실제 조건과 무관하게 세 문항 모두 매번 채워집니다. 사전 설문/최종 행에서는
   비어 있습니다.
-- `PreGender`~`PreContact`(12개)는 사전 설문 행에서만 채워지며, `src/data/questionnaire.ts`의
-  `preSurveyItems` 12개 문항에 각각 전용 필드로 1:1 대응합니다 (아래 표). 선택형 문항
-  (연령대/성별/AI 사용빈도/여행 시 AI 활용빈도/사후 인터뷰 참여 의향)은 실제 선택한
-  텍스트 그대로, likert 문항은 1~7 숫자 그대로, 이름/연락처는 입력한 텍스트 그대로
-  들어갑니다. 조건 행/최종 행에서는 비어 있습니다. `PreName`/`PreContact`는 추가로
-  `PreInterviewConsent`가 "예, 참여할 의향이 있습니다."일 때만 채워집니다 — 아래
-  "PreName/PreContact — 조건부 필드" 참고.
+- `PreGender`~`PreAiTrust`(9개)는 사전 설문 행에서만 채워지며, `src/data/questionnaire.ts`의
+  `preSurveyItems` 9개 문항에 각각 전용 필드로 1:1 대응합니다 (아래 표). 선택형 문항
+  (연령대/성별/AI 사용빈도/여행 시 AI 활용빈도)은 실제 선택한 텍스트 그대로, likert
+  문항은 1~7 숫자 그대로 들어갑니다. 조건 행/최종 행에서는 비어 있습니다. 이 9개는
+  전부 익명 데이터이고, 실명·연락처는 여기 없습니다 — 아래 참고.
 - `Final_satisfaction`/`Final_satisfaction_reason`은 최종 설문(`finalSurveyItems`의
   fs1/fs2)에 대응하며, 다른 모든 행에서는 비어 있습니다. `Final_satisfaction`은 자유
   서술이 아니라 **"인간주도 유형" / "인간+AI 혼합 유형" / "AI주도 유형" 중 하나를 고르는
@@ -49,6 +48,13 @@
   쪽 선택지 문구가 바뀌면 이 3개도 반드시 같이 바꿔야 합니다, 아래 참고). 참고로 이
   최종 문항만 유일하게 조건 이름을 직접 노출합니다 — 이 시점엔 참가자가 세 조건을 모두
   마친 뒤라 앞으로 남은 과업에 편향을 줄 위험이 없기 때문입니다.
+- `PreContact`/`PreInterviewConsent`도 최종 행에서만 채워집니다 —
+  `src/data/questionnaire.ts`의 `rewardSurveyItems`(phone/interview_consent), 최종
+  설문(`QuestionnaireScreen.tsx`) 두 번째 단계("보상 및 사후 인터뷰 안내")의 응답입니다.
+  `PreContact`는 참여 보상(모바일 상품권 지급용 휴대전화 번호)이라 **모든 참가자에게
+  필수**, `PreInterviewConsent`는 그 아래 이어지는 선택 응답입니다. 필드 이름은 예전
+  사전 설문 단계 때 쓰던 그대로지만("Pre" 접두어), 지금은 최종 행에서만 채워진다는 점에
+  유의해주세요.
 
 ## 사전 설문(`presurvey`) 필드 매핑
 
@@ -63,40 +69,56 @@
 | PreAiFreq | 생성형 AI 서비스 사용 빈도 | ai_freq | 완료 |
 | PreAiTravelFreq | 여행 계획/정보 검색 시 생성형 AI 활용 빈도 | ai_travel_freq | 완료 |
 | PreAiTrust | 생성형 AI 제안에 대한 신뢰도 (1~7) | ai_trust | 완료 |
-| PreInterviewConsent | 사후 인터뷰에 참여할 의향이 있으십니까? (예, 참여할 의향이 있습니다./아니요.) | interview_consent | **추가 필요** |
-| PreName | 이름을 입력해주세요. | name | 완료 |
-| PreContact | 연락처를 입력해주세요. | contact | 완료 |
 
 프로토타입 화면에서는 "기본 정보"(gender~age) / "평소 여행 계획 방식"
-(explore_breadth~plan_detailed) / "AI 사용 경험 및 인식"(ai_freq~ai_trust) / "사후
-인터뷰 참여 의향"(interview_consent~contact) 4개 구역으로 이 순서대로 나눠 보여주지만
-(`src/data/questionnaire.ts`의 `preSurveyGroups`/`preSurveyNotes`, 렌더링은
-`SurveyForm.tsx`), 이건 순전히 화면 표시상의 구분일 뿐 — 문항 번호는 하나로 이어지고,
-시트에는 각자 자기 필드에 독립적으로 저장됩니다.
+(explore_breadth~plan_detailed) / "AI 사용 경험 및 인식"(ai_freq~ai_trust) 3개
+구역으로 이 순서대로 나눠 보여주지만 (`src/data/questionnaire.ts`의 `preSurveyGroups`,
+렌더링은 `SurveyForm.tsx`), 이건 순전히 화면 표시상의 구분일 뿐 — 문항 번호는 하나로
+이어지고, 시트에는 각자 자기 필드에 독립적으로 저장됩니다.
 
 문항 문구나 선택지가 바뀌면 `src/data/questionnaire.ts`의 `preSurveyItems`와 폼 양쪽을
 반드시 같이 업데이트해야 합니다 — 특히 객관식 필드를 텍스트로 검증하도록 만드셨다면(예:
 PreAge를 "객관식"으로 설정), 문구가 한 글자라도 다르면 제출이 거부됩니다.
 
-### PreName/PreContact — 조건부 필드
+## 최종 설문(`final`) 필드 매핑 — 만족도 + 보상/사후 인터뷰
 
-`interview_consent`(사후 인터뷰 참여 의향) 질문에 **"예, 참여할 의향이 있습니다."라고
-답한 참가자에게만** 이름/연락처 입력 화면이 나타납니다 — "아니요."를 고르거나 아직
-답하지 않은 참가자는 이 두 문항 자체를 보지 못하고, 시트의 `PreName`/`PreContact`
-칸도 항상 비어 있습니다 (`src/components/flow/PreSurveyScreen.tsx`의 `visibleItems`).
+`QuestionnaireScreen.tsx`가 이제 한 화면 안에서 두 단계로 나뉩니다 — "다음"을 누르기
+전까지는 아무것도 제출되지 않고, 두 번째 단계의 "제출"을 눌러야 아래 4개 필드가 전부
+**한 행**으로 함께 제출됩니다.
 
-### 필요한 작업: PreInterviewConsent 추가
+| 필드 | 문항 | id | 상태 |
+|---|---|---|---|
+| Final_satisfaction | 가장 만족스러웠던 유형 (인간주도 유형/인간+AI 혼합 유형/AI주도 유형) | fs1 (`finalSurveyItems`) | 완료 |
+| Final_satisfaction_reason | 그 이유는 무엇인가요? | fs2 (`finalSurveyItems`) | 완료 |
+| PreContact | 모바일 상품권을 받으실 휴대전화 번호를 입력해 주세요. | phone (`rewardSurveyItems`) | 완료 |
+| PreInterviewConsent | 사후 인터뷰에 참여할 의향이 있으십니까? (예, 참여할 의향이 있습니다./아니요.) | interview_consent (`rewardSurveyItems`) | **폼 수정 필요** |
 
-기존 폼에 아래 필드를 **"단답형(short answer)"** 또는 **"객관식"**으로 추가해 주세요:
+### 필요한 작업: 기존 "이름을 입력해주세요." 질문을 인터뷰 동의 질문으로 리타이틀
 
-- PreInterviewConsent — 사후 인터뷰에 참여할 의향이 있으십니까?
-  (객관식으로 만드실 경우 선택지는 정확히 "예, 참여할 의향이 있습니다." / "아니요." —
-  한 글자라도 다르면 제출이 거부됩니다.)
+새 질문을 추가하는 대신, 이름을 받던 그 질문 **하나를 그대로 재활용**합니다 — 이름
+자체는 이제 전혀 수집하지 않으므로, 그 질문의 제목만 아래처럼 바꿔주시면 됩니다
+(질문을 삭제하고 새로 만들지 마세요 — 그러면 entry ID가 바뀌어서 다시 알려주셔야
+합니다):
 
-추가하신 뒤 **⋮(더보기 메뉴) → "사전 채우기 링크 받기" → "링크 받기"**로 나온 URL을
-저에게 전달해주세요 — `entry.XXXXXXX` ID를 매칭해서 `src/lib/surveyFormFields.ts`에
-반영하겠습니다 (기존 필드들의 entry ID는 폼을 수정해도 바뀌지 않으니 새로 안
-알려주셔도 됩니다).
+1. 기존 "이름을 입력해주세요." 질문을 찾습니다.
+2. 질문 제목을 **"사후 인터뷰에 참여할 의향이 있으십니까?"**로 바꿉니다.
+3. (권장, 필수는 아님) 질문 유형을 단답형(short answer)에서 **객관식**으로 바꾸고,
+   선택지를 정확히 **"예, 참여할 의향이 있습니다."** / **"아니요."**로 추가합니다 — 이
+   프로토타입은 항상 이 두 문자열 중 하나만 보내므로 단답형으로 남겨둬도 정상 동작은
+   하지만, 객관식으로 바꾸면 시트에 오타 없는 깔끔한 응답만 쌓입니다. 이때 선택지
+   문구가 한 글자라도 다르면 Forms가 제출을 거부하니 정확히 위 문구 그대로 입력해
+   주세요.
+4. 이 질문이 **필수(반드시 응답)**로 설정되어 있는지 확인해 주세요 — 이 프로토타입은
+   `rewardSurveyItems`의 phone/interview_consent 둘 다 항상 값을 채워서 보내므로
+   필수여도 문제없지만, 혹시 새로 만든 다른 질문이 필수인데 이 프로토타입이 값을 안
+   보내는 경우가 생기면 **최종 설문(가장 마지막 제출!)이 매 참가자마다 조용히
+   거부**됩니다 — Forms는 이런 경우에도 200 응답을 돌려줘서 코드 쪽에서는 실패를 전혀
+   감지하지 못합니다. 이미 이번 세션에서 다른 필수 필드 문구 불일치로 한 번 겪었던
+   것과 정확히 같은 실패 유형이니, 폼을 수정하실 때마다 한 번씩 유의해 주세요.
+
+entry ID는 `entry.1921088397`로 코드에 이미 반영해 뒀습니다 (질문 제목/유형을 바꿔도
+Forms는 entry ID를 그대로 유지합니다) — 리타이틀만 해주시면 별도로 저에게 알려주실
+내용은 없습니다.
 
 ## (선택) 순서 효과 분석용 추가 필드 4개
 
@@ -120,7 +142,13 @@ URL을 저에게 전달해주세요 — `entry.XXXXXXX` ID를 매칭해서 `src/
    단축키라 사전 설문 제출을 테스트할 수 없습니다. 동의 화면 → 사전 설문 제출까지 한
    번 해보고, 이후에는 `?preview=human` 등으로 조건 하나를 끝까지 진행합니다.
 2. 조건 종료 설문을 제출합니다.
-3. Google Form의 "응답" 탭에 새 응답이 생겼는지, 열이 위 표대로 채워졌는지 확인합니다.
+3. 최종 설문을 확인하려면 `?preview=survey`로 곧장 진입할 수 있습니다 — "마지막 설문"
+   (fs1/fs2)에서 "다음"을 눌러도 아직 아무것도 제출되지 않으니, 이 시점에 새 응답이
+   생기지 않는 게 정상입니다. 이어지는 "보상 및 사후 인터뷰 안내"(phone/
+   interview_consent)까지 답하고 "제출"을 눌러야 최종 행 하나가 4개 필드
+   (Final_satisfaction/Final_satisfaction_reason/PreContact/PreInterviewConsent)를
+   모두 채운 채로 제출됩니다.
+4. Google Form의 "응답" 탭에 새 응답이 생겼는지, 열이 위 표대로 채워졌는지 확인합니다.
 
 ## 참고: 데이터가 유실되지 않도록
 

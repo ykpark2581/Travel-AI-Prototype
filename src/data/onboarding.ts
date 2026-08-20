@@ -24,8 +24,8 @@ export const consentContent = {
     {
       heading: "개인정보 수집 및 비밀 보장",
       body: [
-        "본 연구는 학술 연구 목적으로만 수행되며, 수집된 자료는 연구 목적 외의 용도로 사용되지 않습니다. 본 연구에서는 연령대, 성별 및 설문 응답을 수집하며, 이름·연락처 없이 익명의 참가자 코드로만 관리되어 개인을 식별할 수 없습니다.",
-        "설문 마지막에는 희망하시는 분에 한해 사후 인터뷰 참여 의향을 별도로 여쭙습니다. 참여 의향이 있다고 응답하신 경우에만 인터뷰 대상자 선정 및 연락을 위해 이름과 연락처를 추가로 수집하며, 해당 목적으로만 사용되고 연구진만 접근할 수 있는 공간에 안전하게 보관됩니다. 참여 의향을 밝히지 않으셔도 본 연구 참여에는 전혀 영향이 없습니다. 주민등록번호 등 그 밖의 민감한 개인정보는 수집하지 않습니다.",
+        "본 연구는 학술 연구 목적으로만 수행되며, 수집된 자료는 연구 목적 외의 용도로 사용되지 않습니다. 본 연구에서는 연령대, 성별 및 설문 응답을 익명의 참가자 코드로만 관리하여 개인을 식별할 수 없습니다.",
+        "모든 과업을 완료하시면 참여에 대한 보상으로 모바일 상품권을 지급하기 위해 휴대전화 번호를 수집합니다. 입력하신 번호는 상품권 지급 목적으로만 사용하며, 지급 완료 후 즉시 폐기합니다. 이때 희망하시는 분에 한해 사후 인터뷰 참여 의향을 별도로 여쭙습니다. 참여 의향이 있다고 응답하신 경우에는 인터뷰 대상자 선정 및 일정 안내를 위해 같은 번호를 추가로 활용하며, 해당 목적으로만 사용되고 연구진만 접근할 수 있는 공간에 안전하게 보관됩니다. 참여 의향을 밝히지 않으셔도 본 연구 참여에는 전혀 영향이 없습니다. 주민등록번호 등 그 밖의 민감한 개인정보는 수집하지 않습니다.",
         "수집된 자료는 연구 분석, 학술 발표 및 논문 작성에 활용될 수 있으며, 연구 결과는 개인을 식별할 수 없는 형태로만 보고됩니다. 수집된 자료는 연구 종료 후 3년 동안 안전하게 보관한 뒤 폐기됩니다.",
       ],
     },
@@ -49,11 +49,13 @@ export const consentContent = {
   ],
   // Only 2 checkboxes now — the old 3rd ("나는 이름·연락처 등 개인정보의
   // 수집·이용에 동의합니다.") is gone. That consent isn't blanket/upfront
-  // anymore: it's captured contextually by the interview_consent question
-  // itself, right where name/contact are actually about to be asked for
-  // (see data/questionnaire.ts's preSurveyItems) — a separate checkbox
-  // here would just be redundant with (and easy to drift out of sync
-  // with) that in-context choice.
+  // anymore: the phone number itself is collected unconditionally at the
+  // very end of the study as the participation reward, and interview
+  // consent is captured contextually right there too (see
+  // data/questionnaire.ts's rewardSurveyItems, shown from
+  // QuestionnaireScreen.tsx) — a separate checkbox here would just be
+  // redundant with (and easy to drift out of sync with) that in-context
+  // choice.
   checkboxes: [
     "나는 본 연구의 목적, 절차, 예상 소요 시간, 개인정보 처리 방식 및 참여 중단 가능성에 대한 설명을 읽고 이해했습니다.",
     "나는 본 연구에 자발적으로 참여하는 것에 동의합니다.",

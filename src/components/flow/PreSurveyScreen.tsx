@@ -4,22 +4,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FullScreenCard } from "@/components/flow/FullScreenCard";
 import { SurveyForm, allRequiredAnswered } from "@/components/flow/SurveyForm";
-import {
-  interviewConsentYesLabel,
-  preSurveyDescription,
-  preSurveyGroups,
-  preSurveyItems,
-  preSurveyNotes,
-  preSurveyTitle,
-} from "@/data/questionnaire";
+import { preSurveyDescription, preSurveyGroups, preSurveyItems, preSurveyTitle } from "@/data/questionnaire";
 import { useExperimentStore } from "@/lib/store";
 import { submitSurveyRow, type PreSurveyPayload } from "@/lib/surveySubmission";
-
-// name/contact only render (and only count toward "required") once
-// interview_consent is answered with interviewConsentYesLabel — everyone
-// else never sees them at all, matching preSurveyItems' own comment on
-// why they're conditional now instead of always-required.
-const CONDITIONAL_IDS = ["name", "contact"];
 
 // Shown once, right after consent and before instructions/the first
 // condition (see store.ts's phase "pre-survey", between "consent" and
@@ -27,7 +14,9 @@ const CONDITIONAL_IDS = ["name", "contact"];
 // Google Form/sheet every other survey uses (see docs/SURVEY_SETUP.md and
 // data/questionnaire.ts's preSurveyItems comment) rather than a separate
 // form, tied to the same auto-generated participantCode as the condition/
-// final rows that follow it.
+// final rows that follow it. Every item here is unconditional now — the
+// identifying phone-number/interview-consent questions this screen used to
+// gate moved to the very end of the study instead (see QuestionnaireScreen).
 export function PreSurveyScreen() {
   const participantId = useExperimentStore((s) => s.participantId);
   const completePreSurvey = useExperimentStore((s) => s.completePreSurvey);
@@ -35,25 +24,15 @@ export function PreSurveyScreen() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const interviewOptedIn = answers.interview_consent === interviewConsentYesLabel;
-  const visibleItems = preSurveyItems.filter((item) => interviewOptedIn || !CONDITIONAL_IDS.includes(item.id));
-
-  const ready = allRequiredAnswered(visibleItems, answers);
+  const ready = allRequiredAnswered(preSurveyItems, answers);
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    // Only ever submit answers for currently-visible items — if the
-    // participant picked "예", typed a name, then changed their mind back
-    // to "아니요", `answers.name` is still sitting in state at that point;
-    // without this filter it would silently ride along in the payload
-    // even though the UI (and the participant) now shows it retracted.
-    const visibleIds = new Set(visibleItems.map((item) => item.id));
-    const scopedAnswers = Object.fromEntries(Object.entries(answers).filter(([id]) => visibleIds.has(id)));
     const payload: PreSurveyPayload = {
       kind: "presurvey",
       participantCode: participantId,
       timestamp: new Date().toISOString(),
-      answers: scopedAnswers,
+      answers,
     };
     await submitSurveyRow(payload);
     completePreSurvey();
@@ -66,11 +45,10 @@ export function PreSurveyScreen() {
 
       <div className="mt-8">
         <SurveyForm
-          items={visibleItems}
+          items={preSurveyItems}
           answers={answers}
           onAnswerChange={(id, value) => setAnswers((prev) => ({ ...prev, [id]: value }))}
           groups={preSurveyGroups}
-          notes={preSurveyNotes}
         />
       </div>
 

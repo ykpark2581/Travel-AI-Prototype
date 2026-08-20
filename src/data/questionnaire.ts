@@ -7,7 +7,7 @@ import type { QuestionnaireItem } from "@/types";
 // — posted as its own row with type="presurvey" and destination/block/etc
 // left blank, same shape as the final row.
 //
-// Each item posts to its own dedicated Google Form field (preName..
+// Each item posts to its own dedicated Google Form field (preGender..
 // preAiTrust in surveyFormFields.ts, matched by id — see
 // api/survey/route.ts's PRE_SURVEY_ENTRY_KEYS), not the Q1..Q8 fields
 // conditionSurveyItems uses, so there's no positional-count constraint
@@ -17,24 +17,20 @@ export const preSurveyTitle = "사전 설문";
 export const preSurveyDescription =
   "실험을 시작하기 전에 평소 여행 계획 방식과 AI 사용 경험에 대해 몇 가지 질문을 드립니다.";
 
-// The exact option string that unlocks name/contact below — exported
-// (rather than left as a literal only PreSurveyScreen.tsx knows) so that
-// file's "did they opt in?" check can never drift out of sync with the
-// actual button label here.
+// The exact option string for rewardSurveyItems' interview_consent below
+// (exported rather than left as a literal only that item knows) so
+// QuestionnaireScreen.tsx's "did they opt in?" check can never drift out of
+// sync with the actual button label here.
 export const interviewConsentYesLabel = "예, 참여할 의향이 있습니다.";
 
-// name/contact are the ONLY genuinely-identifying data this whole
-// prototype ever collects — everything else (participantId, every other
-// answer here) is anonymous by design (see store.ts's makeParticipantCode).
-// Unlike every other preSurveyItems item, they're CONDITIONAL — only
-// collected if interview_consent's answer is exactly
-// interviewConsentYesLabel (see PreSurveyScreen.tsx's `visibleItems`,
-// which filters them out of both the rendered form and the "all required
-// answered" check otherwise). Declining consent no longer blocks
-// participation the way it did in an earlier version of consentContent
-// (data/onboarding.ts) — collecting name/phone is now opt-in, scoped
-// specifically to "would you be open to a follow-up interview," not a
-// blanket condition of doing the main study.
+// Bare demographic/behavioral items only now — no identifying data at all
+// (see store.ts's makeParticipantCode for how participants stay anonymous
+// throughout). Phone number and post-interview consent used to live here,
+// gated behind an opt-in choice (an earlier version of this file), but both
+// moved to the very end of the study instead (see rewardSurveyItems below,
+// shown from QuestionnaireScreen.tsx after the final satisfaction
+// questions) — phone collection is now tied to the participation reward
+// itself, not framed as an interview opt-in.
 export const preSurveyItems: QuestionnaireItem[] = [
   {
     id: "gender",
@@ -92,24 +88,6 @@ export const preSurveyItems: QuestionnaireItem[] = [
     type: "likert",
     question: "평소 생성형 AI가 제공하는 정보나 제안을 어느 정도 신뢰하는 편입니까?",
   },
-  {
-    id: "interview_consent",
-    type: "choice",
-    question: "사후 인터뷰에 참여할 의향이 있으십니까?",
-    options: [interviewConsentYesLabel, "아니요."],
-  },
-  {
-    id: "name",
-    type: "shortText",
-    question: "이름을 입력해주세요.",
-    placeholder: "홍길동",
-  },
-  {
-    id: "contact",
-    type: "shortText",
-    question: "연락처를 입력해주세요.",
-    placeholder: "010-0000-0000",
-  },
 ];
 
 // Visual-only section dividers over preSurveyItems (see SurveyForm.tsx's
@@ -118,26 +96,11 @@ export const preSurveyItems: QuestionnaireItem[] = [
 // "AI 사용 경험 및 인식" covers all 3 AI items (ai_freq/ai_travel_freq/
 // ai_trust) rather than splitting further — same topic, no 4th group for
 // ai_trust to belong to instead. "기본 정보" leads (gender/age, both
-// anonymous/low-stakes) rather than trailing like an earlier version;
-// "사후 인터뷰 참여 의향" — the one group with identifying data — comes
-// last, and only actually shows name/contact once opted in (see
-// PreSurveyScreen.tsx's `visibleItems`).
+// anonymous/low-stakes) rather than trailing like an earlier version.
 export const preSurveyGroups = [
   { label: "기본 정보", startId: "gender" },
   { label: "평소 여행 계획 방식", startId: "explore_breadth" },
   { label: "AI 사용 경험 및 인식", startId: "ai_freq" },
-  { label: "사후 인터뷰 참여 의향", startId: "interview_consent" },
-];
-
-// Small inline captions (not group headings, not questions — no id, no
-// numbering, no answer) shown directly above the item named by `beforeId`.
-// See SurveyForm.tsx's `notes` prop for rendering.
-export const preSurveyNotes = [
-  {
-    beforeId: "interview_consent",
-    text: "본 실험 종료 후, 일부 참여자를 대상으로 사후 인터뷰가 진행될 수 있습니다.",
-  },
-  { beforeId: "name", text: "입력하신 정보는 인터뷰 대상자 선정 및 연락 목적으로만 사용됩니다." },
 ];
 
 // Asked identically right after EACH of the three conditions — condition/
@@ -212,3 +175,47 @@ export const conditionTypeDescriptions: Record<string, string> = {
 
 export const likertScaleLabels: [string, string] = ["전혀 그렇지 않다", "매우 그렇다"];
 export const likertScaleSize = 7;
+
+// Shown once, right after finalSurveyItems (same QuestionnaireScreen.tsx,
+// a second step — "다음" moves from satisfaction to this, "제출" submits
+// both together in one combined final row; see api/survey/route.ts, which
+// posts phone/interview_consent through the preContact/preInterviewConsent
+// fields originally reserved for pre-survey's own now-removed name/contact/
+// interview_consent questions). Phone number is collected from EVERYONE
+// (it's the reward, not an interview opt-in) — interview_consent is the
+// only genuinely optional piece here.
+export const rewardSurveyTitle = "보상 및 사후 인터뷰 안내";
+export const rewardSurveyDescription = "본 실험을 완료한 참가자에게 2,000원 상당의 모바일 상품권을 지급합니다.";
+
+export const rewardSurveyItems: QuestionnaireItem[] = [
+  {
+    id: "phone",
+    type: "shortText",
+    question: "모바일 상품권을 받으실 휴대전화 번호를 입력해 주세요. (필수)",
+    placeholder: "예: 010-1234-5678",
+  },
+  {
+    id: "interview_consent",
+    type: "choice",
+    question: "사후 인터뷰에 참여할 의향이 있으십니까?",
+    // Renders under the question text, above the yes/no choices (see
+    // types/index.ts's QuestionnaireChoiceItem/SurveyForm.tsx's
+    // QuestionBlock) — this needs to be read BEFORE deciding, unlike
+    // rewardSurveyNotes' phone-usage note below, which reads as reassurance
+    // AFTER already typing the number.
+    description:
+      "사후 인터뷰는 약 20~30분간 온라인으로 진행됩니다. 참여 의향을 밝힌 참가자 중 일부를 인터뷰 대상자로 선정하여 별도로 연락드리며, 인터뷰 완료 시 5,000원 상당의 커피 상품권을 추가로 지급합니다.",
+    options: [interviewConsentYesLabel, "아니요."],
+  },
+];
+
+// See SurveyForm.tsx's `notes` prop — placed AFTER the phone question's own
+// input (afterId, not beforeId) rather than in rewardSurveyDescription
+// above, since it's specific to that one question (what happens to the
+// number once typed), not the whole screen.
+export const rewardSurveyNotes = [
+  {
+    afterId: "phone",
+    text: "입력한 번호는 모바일 상품권 지급 목적으로만 사용하며, 지급 완료 후 즉시 폐기합니다. 단, 아래 문항에서 사후 인터뷰 참여 의향을 밝힌 경우에는 인터뷰 대상자 선정 및 일정 안내를 위해서도 사용합니다.",
+  },
+];

@@ -77,6 +77,12 @@ function QuestionBlock({
       <p className="text-sm font-medium">
         {number}. {item.question}
       </p>
+      {/* item.description (e.g. rewardSurveyItems' interview_consent
+          explaining what the interview involves) — not to be confused with
+          conditionTypeDescriptions/expandedDescriptions below, which is a
+          per-OPTION disclosure toggle specific to fs1, not a per-question
+          field. */}
+      {item.description && <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>}
       {item.type === "likert" ? (
         <div className="mt-3">
           <LikertRow item={item} answers={answers} onAnswerChange={onAnswerChange} />
@@ -183,12 +189,19 @@ export function SurveyForm({
   // for a form with no such grouping (conditionSurveyItems/
   // finalSurveyItems don't use this).
   groups?: { label: string; startId: string }[];
-  // Small unnumbered captions — e.g. preSurveyNotes' reassurance right
-  // before name/contact ("이름과 연락처는 추가 인터뷰 대상자 선정 및
-  // 연락에만 사용됩니다."). Unlike `groups` above this isn't a section
-  // heading — no bold text, no border, no id/answer of its own, just a
-  // muted line inserted right above `beforeId`'s question.
-  notes?: { beforeId: string; text: string }[];
+  // Small unnumbered captions that sit BETWEEN two items — not inside one
+  // question's own block the way `item.description` is (see
+  // QuestionBlock above), so use this for something that isn't really
+  // about the single question it's anchored to. Unlike `groups` above this
+  // isn't a section heading — no bold text, no border, no id/answer of its
+  // own, just a muted line. `beforeId` places it above that item's whole
+  // block (question + answer control); `afterId` places it below — e.g.
+  // rewardSurveyNotes' phone-number usage/retention policy line, which
+  // reads better once the number's already been typed than stacked above
+  // an empty input. Exactly one of the two should be set per entry.
+  notes?: (({ beforeId: string; afterId?: undefined } | { beforeId?: undefined; afterId: string }) & {
+    text: string;
+  })[];
 }) {
   // Per-item, not global — only ever meaningful for a choice item whose
   // options have matching conditionTypeDescriptions entries (currently
@@ -201,7 +214,8 @@ export function SurveyForm({
     <div className="space-y-7">
       {items.map((item, idx) => {
         const group = groups?.find((g) => g.startId === item.id);
-        const note = notes?.find((n) => n.beforeId === item.id);
+        const noteBefore = notes?.find((n) => n.beforeId === item.id);
+        const noteAfter = notes?.find((n) => n.afterId === item.id);
         return (
           <div key={item.id}>
             {group && (
@@ -209,7 +223,7 @@ export function SurveyForm({
                 <h2 className="text-base font-semibold">{group.label}</h2>
               </div>
             )}
-            {note && <p className="mb-2 text-xs text-muted-foreground">{note.text}</p>}
+            {noteBefore && <p className="mb-2 text-xs text-muted-foreground">{noteBefore.text}</p>}
             <QuestionBlock
               item={item}
               number={idx + 1}
@@ -218,6 +232,7 @@ export function SurveyForm({
               expandedDescriptions={expandedDescriptions}
               setExpandedDescriptions={setExpandedDescriptions}
             />
+            {noteAfter && <p className="mt-2 text-xs text-muted-foreground">{noteAfter.text}</p>}
           </div>
         );
       })}

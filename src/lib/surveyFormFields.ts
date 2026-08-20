@@ -82,16 +82,27 @@ export const SURVEY_FORM_ENTRY_IDS = {
   preAiFreq: "entry.682289271",
   preAiTravelFreq: "entry.23303149",
   preAiTrust: "entry.1881472389",
-  // preSurveyItems' name/contact — confirmed live via a fresh pre-filled-
-  // link URL (each field filled with "prename"/"precontact" respectively).
-  preName: "entry.1921088397",
+  // Originally preSurveyItems' own contact — that pre-survey step no longer
+  // exists (see data/questionnaire.ts's preSurveyItems comment). Reused by
+  // QuestionnaireScreen.tsx's reward step instead (rewardSurveyItems' phone
+  // question, posted from api/survey/route.ts's final-row branch) — same
+  // live field, just fed from a different screen now.
   preContact: "entry.1027892861",
-  // preSurveyItems' interview_consent — new, not in the form yet. Same
-  // "REPLACE_..." bootstrapping every other pre-survey field went through
-  // before its entry ID was confirmed; not in REQUIRED_ENTRY_KEYS below,
-  // so `set()` just skips it (like any not-yet-configured optional field)
-  // until it's added.
-  preInterviewConsent: "REPLACE_entry_id",
+  // Originally preSurveyItems' own name field (entry.1921088397) — since
+  // this flow never collects a name at all any more, the researcher
+  // repurposed that same live Google Form question into
+  // rewardSurveyItems' interview_consent question instead (retitled
+  // "이름을 입력해주세요." → "사후 인터뷰에 참여할 의향이 있으십니까?" on
+  // the live Form — Forms keeps the entry ID stable across a retitle, same
+  // as how q4/q8 above were repurposed) rather than adding a brand-new
+  // question, so there's no separate "preName" key any more — this IS
+  // that field now. If the question stayed a plain 단답형 (short answer) on
+  // the live Form rather than being switched to 객관식 (multiple choice),
+  // that's fine too — Forms only validates option text for actual
+  // multiple-choice questions, and this app only ever posts
+  // interviewConsentYesLabel/"아니요." here regardless of the live
+  // question's rendered type.
+  preInterviewConsent: "entry.1921088397",
 } as const;
 
 // The columns the form actually has — destination isn't among them (see

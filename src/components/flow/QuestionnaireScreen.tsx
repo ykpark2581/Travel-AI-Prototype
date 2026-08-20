@@ -4,25 +4,39 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FullScreenCard } from "@/components/flow/FullScreenCard";
 import { SurveyForm, allRequiredAnswered } from "@/components/flow/SurveyForm";
-import { finalSurveyItems } from "@/data/questionnaire";
+import {
+  finalSurveyItems,
+  rewardSurveyDescription,
+  rewardSurveyItems,
+  rewardSurveyNotes,
+  rewardSurveyTitle,
+} from "@/data/questionnaire";
 import { useExperimentStore } from "@/lib/store";
 import { submitSurveyRow, type FinalSurveyPayload } from "@/lib/surveySubmission";
 
 // Shown once, after all three conditions and their per-condition surveys
-// are done — a final comparative reflection across the three experiences.
-// This is the last submission of the study, so there's no later submission
-// to piggyback a retry on if it fails (see surveySubmission.ts) — the
-// thank-you screen shows regardless, since there's nothing more the
-// participant can usefully do either way.
+// are done — two steps in this one screen, not two phases (see
+// lib/store.ts's Phase type, still just "questionnaire"): step 1 is a final
+// comparative reflection across the three experiences (finalSurveyItems);
+// "다음" only advances local state, nothing is submitted yet. Step 2 is the
+// reward/post-interview step (rewardSurveyItems — phone number for the
+// participation gift, optional post-interview consent), and "제출" submits
+// BOTH steps' answers together as one combined final row (see
+// api/survey/route.ts) — this is the last submission of the study, so
+// there's no later submission to piggyback a retry on if it fails (see
+// surveySubmission.ts) — the thank-you screen shows regardless, since
+// there's nothing more the participant can usefully do either way.
 export function QuestionnaireScreen() {
   const participantId = useExperimentStore((s) => s.participantId);
   const conditionOrder = useExperimentStore((s) => s.conditionOrder);
 
+  const [step, setStep] = useState<"satisfaction" | "reward">("satisfaction");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const ready = allRequiredAnswered(finalSurveyItems, answers);
+  const satisfactionReady = allRequiredAnswered(finalSurveyItems, answers);
+  const rewardReady = allRequiredAnswered(rewardSurveyItems, answers);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -42,8 +56,31 @@ export function QuestionnaireScreen() {
       <FullScreenCard>
         <h1 className="text-xl font-semibold">참여해 주셔서 감사합니다!</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          모든 과업이 완료되었습니다. 소중한 시간을 내어 연구에 참여해 주셔서 진심으로 감사드립니다.
+          모든 과업이 완료되었습니다. 입력해 주신 번호로 모바일 상품권을 보내드리겠습니다. 소중한 시간을 내어
+          연구에 참여해 주셔서 진심으로 감사드립니다.
         </p>
+      </FullScreenCard>
+    );
+  }
+
+  if (step === "reward") {
+    return (
+      <FullScreenCard className="max-w-2xl">
+        <h1 className="text-xl font-semibold">{rewardSurveyTitle}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{rewardSurveyDescription}</p>
+
+        <div className="mt-8">
+          <SurveyForm
+            items={rewardSurveyItems}
+            answers={answers}
+            onAnswerChange={(id, value) => setAnswers((prev) => ({ ...prev, [id]: value }))}
+            notes={rewardSurveyNotes}
+          />
+        </div>
+
+        <Button className="mt-8 w-full" size="lg" disabled={!rewardReady || submitting} onClick={handleSubmit}>
+          {submitting ? "제출하는 중..." : "제출하기"}
+        </Button>
       </FullScreenCard>
     );
   }
@@ -61,8 +98,13 @@ export function QuestionnaireScreen() {
         />
       </div>
 
-      <Button className="mt-8 w-full" size="lg" disabled={!ready || submitting} onClick={handleSubmit}>
-        {submitting ? "제출하는 중..." : "제출하기"}
+      <Button
+        className="mt-8 w-full"
+        size="lg"
+        disabled={!satisfactionReady}
+        onClick={() => setStep("reward")}
+      >
+        다음
       </Button>
     </FullScreenCard>
   );

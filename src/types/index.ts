@@ -275,16 +275,26 @@ export interface ChatMessage {
   checklist?: ChecklistPayload;
 }
 
+// `description`, shared by every variant below, renders as a muted line
+// directly under the question text and above its answer control (see
+// SurveyForm.tsx's QuestionBlock) — for context a participant needs BEFORE
+// answering (e.g. rewardSurveyItems' interview_consent explaining what the
+// interview actually involves before asking yes/no). Distinct from
+// SurveyForm's own `notes` prop, which places a line between two different
+// items rather than inside one item's own block — use `description` for
+// anything specific to that one question, `notes` for anything that isn't.
 export interface QuestionnaireLikertItem {
   id: string;
   type: "likert";
   question: string;
+  description?: string;
 }
 
 export interface QuestionnaireTextItem {
   id: string;
   type: "text";
   question: string;
+  description?: string;
 }
 
 // A single-line free-text answer (name, phone number) — distinct from
@@ -298,6 +308,7 @@ export interface QuestionnaireShortTextItem {
   type: "shortText";
   question: string;
   placeholder?: string;
+  description?: string;
 }
 
 // Single-select — currently only the final survey's fs1 (see
@@ -310,6 +321,7 @@ export interface QuestionnaireChoiceItem {
   type: "choice";
   question: string;
   options: string[];
+  description?: string;
 }
 
 export type QuestionnaireItem =
