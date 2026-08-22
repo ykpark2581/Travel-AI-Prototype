@@ -22,7 +22,7 @@ export function ItineraryPanel({ loading }: { loading: boolean }) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold">{meta.name} 일정</h2>
+        <h2 className="text-lg font-semibold">{meta.city} 일정</h2>
         <p className="text-sm text-muted-foreground">
           {meta.startDate} – {meta.endDate} · {meta.nights}박{meta.days}일
         </p>

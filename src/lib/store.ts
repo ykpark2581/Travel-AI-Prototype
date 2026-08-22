@@ -955,8 +955,8 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     // the greeting → fixed-prompt beat that plays out there before
     // anything actually starts.
     acknowledgeIntroduction: () => {
-      const destinationName = get().destinationBundle.meta.name;
-      beginPlanningChat(dialogue.buildInitialPrompt(destinationName));
+      const meta = get().destinationBundle.meta;
+      beginPlanningChat(dialogue.buildInitialPrompt(meta.country, meta.city));
     },
 
     sendPendingPrompt,
@@ -1255,7 +1255,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
       // greeting → fixed-prompt beat (see beginPlanningChat) rather than
       // skipping straight into exploration, so later conditions never feel
       // like the AI just started on its own either.
-      beginPlanningChat(dialogue.buildInitialPrompt(nextBundle.meta.name));
+      beginPlanningChat(dialogue.buildInitialPrompt(nextBundle.meta.country, nextBundle.meta.city));
     },
 
     // Dev-only shortcut (see ?preview=human|mixed|ai in ExperimentFlow) for
@@ -1270,7 +1270,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
         condition,
         destinationBundle: bundle,
       });
-      jumpIntoPlanning(dialogue.buildInitialPrompt(bundle.meta.name));
+      jumpIntoPlanning(dialogue.buildInitialPrompt(bundle.meta.country, bundle.meta.city));
     },
 
     jumpToQuestionnaire: () => {

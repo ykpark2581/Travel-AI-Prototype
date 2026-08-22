@@ -8,8 +8,13 @@ import type { TravelStyleTag } from "@/types";
 export const initialGreeting =
   "안녕하세요, 여행 계획을 도와드리는 AI 여행 플래너입니다. 어떤 여행을 계획하고 계신가요?";
 
-export function buildInitialPrompt(destinationName: string): string {
-  return `9월 24일부터 9월 27일까지 ${destinationName} 여행을 가려고 해. 아직 아무것도 알아본 건 없어. 항공편, 숙소, 액티비티, 식당까지 전체적인 여행 계획을 짜줄래?`;
+// The only spot that names both the country AND the city (see
+// types/index.ts's DestinationMeta comment) — "베트남 다낭 여행", not just
+// "다낭 여행"; every other destination-naming spot in the app uses the
+// city alone (see store.ts/ItineraryPanel.tsx/itinerary.ts/
+// TransitionScreen.tsx).
+export function buildInitialPrompt(country: string, city: string): string {
+  return `9월 24일부터 9월 27일까지 ${country} ${city} 여행을 가려고 해. 아직 아무것도 알아본 건 없어. 항공편, 숙소, 액티비티, 식당까지 전체적인 여행 계획을 짜줄래?`;
 }
 
 // components/workspace/AiWorkingPanel.tsx's text while lib/store.ts's
@@ -367,8 +372,26 @@ export function transitionTitle(completedNumber: number): string {
   return `여행 계획 ${completedNumber}${particle} 완료되었습니다.`;
 }
 
-export function transitionDescription(nextDestinationName: string): string {
-  return `다음은 새로운 여행지인 ${nextDestinationName}으로 여행을 계획하는 상황입니다.\n\n화면의 안내에 따라 진행해주세요.`;
+// Picks "로" after a vowel-ending syllable (no 받침) vs "으로" after a
+// consonant-ending one — e.g. "타이베이" → "타이베이로", "다낭" →
+// "다낭으로". Needed below because the destination is now always a city
+// (다낭/방콕/타이베이, see transitionDescription's own comment) rather
+// than the old meta.name mix, where every value happened to end in a
+// consonant; 타이베이 doesn't, so the hardcoded "으로" that worked by
+// coincidence before would read as a grammar mistake now
+// ("타이베이으로"). Falls back to "으로" for anything outside the Hangul
+// syllable block (shouldn't happen — every city name here is plain
+// Korean — but a safe default beats an out-of-range index).
+function withRo(word: string): string {
+  const code = word.charCodeAt(word.length - 1) - 0xac00;
+  const hasBatchim = code < 0 || code > 11171 ? true : code % 28 !== 0;
+  return `${word}${hasBatchim ? "으로" : "로"}`;
+}
+
+// Takes the city (see TransitionScreen.tsx), same as every other
+// destination-naming spot outside buildInitialPrompt above.
+export function transitionDescription(nextCity: string): string {
+  return `다음은 새로운 여행지인 ${withRo(nextCity)} 여행을 계획하는 상황입니다.\n\n화면의 안내에 따라 진행해주세요.`;
 }
 
 // The final plan message's own "move on" action (see

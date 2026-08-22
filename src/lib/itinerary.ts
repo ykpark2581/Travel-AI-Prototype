@@ -55,7 +55,7 @@ function hotelBreakfastItem(hotel: Hotel): ItineraryItem {
 function day1MorningItems(meta: DestinationBundle["meta"], flight: Flight, hotel: Hotel): ItineraryItem[] {
   return [
     { label: `출국 — ${flight.from} → ${flight.to}`, detail: `${flight.airline} · ${flight.departTime} 출발` },
-    { label: `${meta.name} 도착`, detail: `${flight.arriveTime} 도착 · 비행시간 ${flight.duration}` },
+    { label: `${meta.city} 도착`, detail: `${flight.arriveTime} 도착 · 비행시간 ${flight.duration}` },
     { label: `체크인 — ${hotel.name}`, detail: hotel.area, image: hotel.image },
   ];
 }

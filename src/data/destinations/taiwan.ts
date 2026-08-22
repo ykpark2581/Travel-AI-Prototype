@@ -3,7 +3,7 @@ import type { Activity, DestinationBundle, Flight, Hotel, Restaurant } from "@/t
 const meta = {
   id: "taiwan" as const,
   name: "대만",
-  country: "타이베이",
+  country: "대만",
   city: "타이베이",
   startDate: "9월 24일",
   endDate: "9월 27일",

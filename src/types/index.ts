@@ -99,18 +99,26 @@ export interface Restaurant {
 
 export interface DestinationMeta {
   id: DestinationId;
-  name: string;
-  country: string;
-  // The actual city the itinerary is set in — distinct from `name`/
-  // `country` above, which are inconsistent about which one holds the city
-  // across bundles (bangkok's `name` is already "방콕", but vietnam's
-  // `name` is "베트남" with "다낭" living in `country`, and taiwan's
-  // `name` is "대만" with "타이베이" living in `country`). Added so any
-  // copy that specifically needs "the city, and only the city" (see
-  // dialogue.ts's flightsHotelsCollectingComplete) has one unambiguous
-  // field to read instead of guessing which of the two existing ones is
-  // right for a given destination.
+  // The destination as shown mid-flow (see dialogue.ts's
+  // mixedExplorationPrompt/humanExploreIntro/aiLedStyleQuestionIntro,
+  // ItineraryPanel.tsx, itinerary.ts, TransitionScreen.tsx) — always the
+  // actual city (다낭/방콕/타이베이), never the country, so every one of
+  // those spots reads consistently regardless of which destination is
+  // active. `name` below is kept distinct for the one place that DOES want
+  // both (see dialogue.ts's buildInitialPrompt, the opening scenario
+  // prompt — "베트남 다낭 여행", not just "다낭 여행").
   city: string;
+  // A general-purpose display name — historically inconsistent about
+  // whether it held the city or the country (bangkok's was already
+  // "방콕", vietnam/taiwan's were "베트남"/"대만") until `city` above was
+  // added to disambiguate; not read anywhere UI-facing any more (`city`
+  // and `country` cover every current use), kept mainly for
+  // ConditionSurveyScreen.tsx's backend `destination` field.
+  name: string;
+  // The actual country/region (베트남/태국/대만) — paired with `city`
+  // above in buildInitialPrompt's "국가 + 도시" prompt; everywhere else
+  // that only wants one of the two reads `city` alone.
+  country: string;
   startDate: string;
   endDate: string;
   dayDates: string[];
