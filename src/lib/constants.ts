@@ -37,16 +37,47 @@ export function readingDelayMs(text: string): number {
   return Math.min(READING_DELAY_MS_MAX, Math.max(CHAT_REPLY_DELAY_MS_RANGE[0], estimated));
 }
 
+// Estimates how long `text` takes to actually finish typing itself out on
+// screen (see components/chat/TypewriterText.tsx's own reveal-timing
+// algorithm — same 35ms/char pace, +500ms after a sentence-ending "."/"?",
+// +1400ms after a line break) — used by lib/store.ts's sendAiMessage to
+// hold off a message's `after` callback until the bubble has actually
+// finished typing, not the instant it starts. Without this, anything
+// `after` does that changes OTHER visible UI (switching the workspace
+// panel to "탐색 중", posting the next checklist, etc.) used to fire the
+// moment the bubble was ADDED to state — which, back when bubbles appeared
+// with their full text instantly, was the same moment as "finished
+// reading." Once TypewriterText made that same moment just the START of a
+// multi-second reveal, those side effects kept popping in while the
+// participant was still watching the text type out.
+// Deliberately re-derives the estimate from character/punctuation counts
+// rather than importing TypewriterText's own tokenizer (a UI component) —
+// this only needs to be close enough to avoid that jarring gap, not
+// pixel-perfect; if TypewriterText's own pacing constants ever change,
+// update the ones here to match.
+const TYPING_CHAR_DELAY_MS = 35;
+const TYPING_SENTENCE_PAUSE_MS = 500;
+const TYPING_LINE_BREAK_PAUSE_MS = 1400;
+export function typingDurationMs(text: string): number {
+  if (!text) return 0;
+  const sentenceEnders = (text.match(/[.?]/g) ?? []).length;
+  const lineBreakRuns = (text.match(/\n+/g) ?? []).length;
+  const baseCost = text.length * TYPING_CHAR_DELAY_MS;
+  const sentenceBonus = sentenceEnders * (TYPING_SENTENCE_PAUSE_MS - TYPING_CHAR_DELAY_MS);
+  const lineBreakBonus = lineBreakRuns * (TYPING_LINE_BREAK_PAUSE_MS - TYPING_CHAR_DELAY_MS);
+  return baseCost + sentenceBonus + lineBreakBonus;
+}
+
 // How long each checklist item holds before the next one reveals (see
-// lib/store.ts's runChecklist) — 2s per line ("hotely.com 사이트 탐색
-// 중" etc.). Was 5s, but AI-led's flow used to run all 9 lines back to
-// back in one checklist (now split into two shorter ones — see
-// dialogue.aiLedFlightsHotelsChecklistItems/explorationCollectionChecklistItems,
-// the latter now shared with human-led/mixed-led — see lib/store.ts's
-// runAiLedFlow), which stretched that condition's wait alone to ~45s; 2s
-// keeps every step still individually readable without the cumulative
-// wait feeling endless.
-export const CHECKLIST_ITEM_MS = 2000;
+// lib/store.ts's runChecklist) — 5s per line ("hotely.com 사이트 탐색
+// 중" etc.). Was 2s, but that read as too fast to actually read each line
+// rather than just watch it flash by — back when checklists ran up to 9
+// lines in one back-to-back sequence (AI-led's old combined flow) 2s kept
+// the total wait from stretching to ~45s, but every checklist is now split
+// short (3-5 lines — see e.g. dialogue.mixedFinalPlanChecklistItems/
+// aiLedFinalPlanChecklistItems), so a slower per-line pace no longer
+// balloons the total wait the way it would have before.
+export const CHECKLIST_ITEM_MS = 5000;
 
 // Extra floor under the whole checklist card's visible time (see
 // postChecklist) — mostly redundant now that every item alone takes

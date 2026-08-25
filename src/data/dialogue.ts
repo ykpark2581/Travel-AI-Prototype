@@ -317,7 +317,7 @@ export const aiLedStyleQuestionConfirmedMessage =
 export const aiLedFinalPlanIntro = "액티비티와 식당 선정이 완료되었습니다.";
 export const aiLedFinalPlanChecklistItems = [
   "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",
-  "항공편과 숙소 선택 완료",
+  "항공편과 숙소 최종 선택 완료",
   "최종 여행 일정 구성 완료",
 ];
 
@@ -333,7 +333,7 @@ export const aiLedFinalPlanChecklistItems = [
 export const finalPlanChecklistItems = [
   "선택하신 액티비티·식당 확인 중",
   "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",
-  "항공편과 숙소 선택 완료",
+  "항공편과 숙소 최종 선택 완료",
   "최종 여행 일정 구성 완료",
 ];
 
@@ -353,7 +353,7 @@ export const mixedPreferenceAnalysisIntro =
 export const mixedFinalPlanChecklistItems = [
   "선호 패턴을 파악하여 액티비티·식당 후보 선정 중",
   "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",
-  "항공편과 숙소 선택 완료",
+  "항공편과 숙소 최종 선택 완료",
   "최종 여행 일정 구성 완료",
 ];
 

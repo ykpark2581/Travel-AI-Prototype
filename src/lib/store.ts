@@ -31,6 +31,7 @@ import {
   MIN_PROCESSING_MS,
   readingDelayMs,
   STAGE_SKELETON_MS,
+  typingDurationMs,
 } from "@/lib/constants";
 
 type Phase = "consent" | "pre-survey" | "instructions" | "planning" | "condition-survey" | "transition" | "questionnaire";
@@ -352,8 +353,24 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // original fixed delay — see readingDelayMs. An explicit `delayMs` still
   // overrides this entirely for call sites that need a specific timing
   // (e.g. runChecklist's own per-item pacing doesn't go through here).
+  //
+  // `after`, separately, no longer fires the instant `text` is added to
+  // state — it's held back by typingDurationMs(text) first (see
+  // lib/constants.ts), skipped only for the very first message of a
+  // condition (see ChatPanel.tsx/ChatMessage.tsx's `isFirst`, which shows
+  // instantly with no typewriter at all — nothing to wait for there).
+  // Before this, anything `after` does that changes OTHER visible UI
+  // (switching the workspace panel to "탐색 중", posting the next
+  // checklist, etc. — see e.g. runFlightsHotelsCollection) fired the
+  // moment the bubble appeared, which used to be the same moment as
+  // "finished reading" back when bubbles rendered their full text
+  // instantly — once components/chat/TypewriterText.tsx made that instead
+  // just the start of a multi-second reveal, those side effects kept
+  // popping in while the participant was still watching THIS message type
+  // out, reading as the workspace jumping ahead mid-sentence.
   function sendAiMessage(text: string, after?: () => void, extra?: Partial<ChatMessage>, delayMs?: number) {
     set({ isTyping: true });
+    const isFirstMessage = get().messages.length === 0;
     const previousText = get().messages.at(-1)?.text ?? "";
     const delay = delayMs ?? readingDelayMs(previousText);
     setTimeout(() => {
@@ -361,7 +378,9 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
         messages: [...state.messages, { id: makeId(), role: "assistant", text, ...extra }],
         isTyping: false,
       }));
-      after?.();
+      if (!after) return;
+      const typingDelay = isFirstMessage ? 0 : typingDurationMs(text);
+      setTimeout(after, typingDelay);
     }, delay);
   }
 

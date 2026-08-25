@@ -137,7 +137,7 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   },
   { id: "dv4", type: "likert", question: "다양한 선택지를 살펴보면서 내가 원하는 것을 더욱 분명히 할 수 있었다." },
   { id: "dv7", type: "likert", question: "이번 여행 계획 과정에서 내가 원하는 방향으로 계획에 영향을 줄 수 있다고 느꼈다." },
-  { id: "dv8", type: "likert", question: "AI가 제공한 여행 정보와 추천을 믿고 여행 계획에 활용할 수 있다고 느꼈다." },
+  { id: "dv8", type: "likert", question: "이번 여행 계획에서 AI가 제공한 정보와 추천을 신뢰할 수 있다고 느꼈다." },
 ];
 
 // Asked once, at the very end, after all three conditions — unlike every
