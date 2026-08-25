@@ -136,7 +136,7 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
     question: "이번 여행 계획 방식은 예상하지 못했던 흥미로운 정보를 발견할 기회를 제공한다고 느꼈다.",
   },
   { id: "dv4", type: "likert", question: "다양한 선택지를 살펴보면서 내가 원하는 것을 더욱 분명히 할 수 있었다." },
-  { id: "dv7", type: "likert", question: "여행 계획 과정에서 내 의견과 선호가 충분히 반영되었다고 느꼈다." },
+  { id: "dv7", type: "likert", question: "이번 여행 계획 과정에서 내가 원하는 방향으로 계획에 영향을 줄 수 있다고 느꼈다." },
   { id: "dv8", type: "likert", question: "AI가 제공한 여행 정보와 추천을 믿고 여행 계획에 활용할 수 있다고 느꼈다." },
 ];
 

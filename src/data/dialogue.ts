@@ -308,35 +308,63 @@ export const aiLedStyleQuestionConfirmedMessage =
   "알려주신 여행 스타일을 바탕으로 후보를 비교해 적합한 액티비티와 식당을 선정할게요.";
 
 // AI-led only — once runAiAutoplay finishes sweeping both catalogs, this
-// short intro + 3-item checklist plays before the shared final-plan
-// message (see lib/store.ts's runAiLedFlow), mirroring the shape of
-// human-led/mixed-led's own runFinalPlanGeneration beat below just with
-// one less item — "선택하신 장소 분석 중" is skipped here since the
-// autoplay the participant just watched already *was* that analysis, not
-// a repeat of it.
+// short intro + checklist plays before the shared final-plan message (see
+// lib/store.ts's runAiLedFlow). Starts straight at the flights/hotels
+// comparison step — no "액티비티·식당 후보 선정" line the way human-led/
+// mixed-led get (see finalPlanChecklistItems/mixedFinalPlanChecklistItems
+// below) — since the autoplay the participant just watched already *was*
+// that selection, not something left to (re-)summarize here.
 export const aiLedFinalPlanIntro = "액티비티와 식당 선정이 완료되었습니다.";
-export const aiLedFinalPlanChecklistItems = ["이동 동선 최적화 중", "항공편 선택 완료", "숙소 선택 완료"];
-
-// Step 3 for human-led/mixed-led — once explore wraps up (human's placement
-// step, mixed's own finish), the AI folds flights/hotels into the final
-// plan for the first time (see lib/store.ts's runFinalPlanGeneration). A
-// short checklist plays first, then the condition-appropriate closing line
-// below, then the flight/hotel card + Day 1-4 itinerary appear together.
-// AI-led has its own near-identical but shorter beat instead — see
-// aiLedFinalPlanIntro/aiLedFinalPlanChecklistItems above.
-export const finalPlanChecklistItems = [
-  "선택하신 장소 분석 중",
-  "이동 동선 최적화 중",
-  "항공편 선택 완료",
-  "숙소 선택 완료",
+export const aiLedFinalPlanChecklistItems = [
+  "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",
+  "항공편과 숙소 선택 완료",
+  "최종 여행 일정 구성 완료",
 ];
 
-// Fixed for every condition — the last chat message before the trip
-// summary card + Day 1-4 itinerary appear (see lib/store.ts's
-// sendFinalPlanMessage). Deliberately the same words regardless of
-// condition; per-condition nuance lives in the bottom AI-comment box
-// instead (see aiCommentSummary* below), not in this closing line.
-export const finalPlanMessage = "액티비티와 식당의 동선을 고려한 최종 여행 일정을 제안드립니다.\n\n확인해 보세요!";
+// Step 3 for human-led — once the participant's own Day 1-4 placement
+// wraps up, the AI folds flights/hotels into the final plan (see
+// lib/store.ts's runFinalPlanGeneration). "선택하신 액티비티·식당 확인
+// 중" is accurate here — human-led participants really did pick and place
+// every item themselves, so this is a genuine confirmation step, not an
+// analysis of a signal (contrast with mixed-led's "선호 패턴을 파악하여
+// ~ 선정 중" below, which infers rather than confirms). AI-led has its own
+// shorter version without this first line — see aiLedFinalPlanIntro/
+// aiLedFinalPlanChecklistItems above.
+export const finalPlanChecklistItems = [
+  "선택하신 액티비티·식당 확인 중",
+  "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",
+  "항공편과 숙소 선택 완료",
+  "최종 여행 일정 구성 완료",
+];
+
+// Mixed-led only (see lib/store.ts's runMixedFinalPlanGeneration, called
+// from finishMixedExploring instead of the shared runFinalPlanGeneration
+// above) — a short chat message makes the AI's next move explicit before
+// the checklist starts, then the checklist's first line frames this as
+// inferring/selecting from the 👍/👎 signal ("선호 패턴을 파악하여 ~ 선정
+// 중"), not confirming a direct pick the way human-led's "선택하신
+// 액티비티·식당 확인 중" does — mixed-led participants never picked a
+// place directly, so that phrasing would misstate what happened here. The
+// remaining 3 lines are shared verbatim with finalPlanChecklistItems/
+// aiLedFinalPlanChecklistItems (same flights/hotels comparison + wrap-up
+// beat every condition ends on).
+export const mixedPreferenceAnalysisIntro =
+  "살펴보신 후보와 관심 표시를 바탕으로 선호를 분석했어요.\n관심을 보인 장소와 비슷한 후보들을 함께 비교하고, 이동 동선과 일정 구성을 고려해 최종 장소를 선정할게요.";
+export const mixedFinalPlanChecklistItems = [
+  "선호 패턴을 파악하여 액티비티·식당 후보 선정 중",
+  "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",
+  "항공편과 숙소 선택 완료",
+  "최종 여행 일정 구성 완료",
+];
+
+// The last chat message before the trip summary card + Day 1-4 itinerary
+// appear (see lib/store.ts's sendFinalPlanMessage), shared word-for-word
+// by all three conditions now — each one's own checklist above already
+// carries whatever per-condition nuance is needed, so this closing line
+// doesn't have to. Per-condition nuance otherwise lives in the bottom
+// AI-comment box (see aiCommentSummary* below), not this line.
+export const finalPlanMessage =
+  "액티비티와 식당, 항공편과 숙소를 고려하여 최종 여행 일정을 구성했습니다.\n\n확인해 보세요!";
 
 // Every activity/restaurant that makes the final cut gets its own "why
 // this is here" line right on its card for mixed-led/AI-led (see

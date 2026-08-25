@@ -1,5 +1,6 @@
-import { computePreferenceRank } from "@/lib/preferenceRank";
+import { computeMixedPreferenceRank, computePreferenceRank } from "@/lib/preferenceRank";
 import { getActivityRecommendationReason, getRestaurantRecommendationReason } from "@/lib/recommendationReason";
+import { getMixedActivityRecommendationReason, getMixedRestaurantRecommendationReason } from "@/lib/mixedRecommendationReason";
 import type {
   Activity,
   Condition,
@@ -77,10 +78,13 @@ function day4EveningTailItems(flight: Flight, hotel: Hotel): ItineraryItem[] {
 
 // Mixed-led/AI-led only — every activity/restaurant that makes the cut gets
 // a mandatory "why this is here" line (see types/index.ts's
-// ItineraryItem.aiComment): mixed-led explains via the style tag its own
-// 👍 signal surfaced, AI-led via whatever the companion-implied tag/rating/
-// price qualifies it for (see lib/recommendationReason.ts) — human-led never
-// calls this, see generateItineraryFromDayPlan's own comment instead.
+// ItineraryItem.aiComment): mixed-led explains in terms of the 👍/👎
+// interest signal the AI interpreted (see lib/mixedRecommendationReason.ts
+// — different wording depending on whether THIS item was actually marked
+// 관심있음 or the AI included it based on inferred preference instead),
+// AI-led via whatever the companion-implied tag/rating/price qualifies it
+// for (see lib/recommendationReason.ts) — human-led never calls this, see
+// generateItineraryFromDayPlan's own comment instead.
 //
 // Every day (1-4) follows the same 오전/오후/저녁 template — 오전 is 조식 on
 // days 2-4, the outbound flight/arrival/체크인 on day 1 (see
@@ -95,13 +99,18 @@ export function generateItinerary(
   condition: Condition
 ): ItineraryDay[] {
   const { meta, flight, hotel, activities, restaurants } = bundle;
+  const isMixed = condition === "mixed";
 
-  // Rank the full catalog by explicit signal only — interest (mixed-led)
-  // and/or confirmed preference tags (see lib/preferenceRank.ts) — then take
-  // the top N per stage. Degrades to catalog order when neither is present
-  // (AI-led passes no interest at all, ranking purely by implied tag).
-  const rankedActivityIds = computePreferenceRank(activities, selectedTags.activities, interest?.activities);
-  const rankedRestaurantIds = computePreferenceRank(restaurants, selectedTags.restaurants, interest?.restaurants);
+  // Mixed-led ranks with the fuller multi-factor version (rating/proximity/
+  // category-diversity on top of interest+tag — see
+  // computeMixedPreferenceRank's own comment for why); AI-led keeps using
+  // the plain version, completely unaffected by any of this branch.
+  const rankedActivityIds = isMixed
+    ? computeMixedPreferenceRank(activities, selectedTags.activities, interest?.activities, ACTIVITY_SLOTS, hotel.area)
+    : computePreferenceRank(activities, selectedTags.activities, interest?.activities);
+  const rankedRestaurantIds = isMixed
+    ? computeMixedPreferenceRank(restaurants, selectedTags.restaurants, interest?.restaurants, RESTAURANT_SLOTS, hotel.area)
+    : computePreferenceRank(restaurants, selectedTags.restaurants, interest?.restaurants);
 
   const activityById = new Map(activities.map((a) => [a.id, a]));
   const restaurantById = new Map(restaurants.map((r) => [r.id, r]));
@@ -117,22 +126,44 @@ export function generateItinerary(
   // commented in day/period order as the `slots` literal below is built, so
   // this also reads as "each new card avoids repeating what was just said."
   const usedReasons = new Set<string>();
+  // The one style tag inferred from what was actually liked (see
+  // lib/store.ts's finishMixedExploring) — mixed-led's own comment
+  // generator uses this to explain a non-liked inclusion; ai-led ignores it
+  // (selectedTags there comes from the participant's own direct pick, not
+  // an interest inference, so its existing per-item tag-match path already
+  // covers that case correctly).
+  const inferredActivityTag = selectedTags.activities[0] ?? null;
+  const inferredRestaurantTag = selectedTags.restaurants[0] ?? null;
 
   const activityComment = (activity: Activity) =>
-    getActivityRecommendationReason(
-      activity,
-      activity.styleTags.filter((t) => selectedTags.activities.includes(t)),
-      condition,
-      usedReasons
-    );
+    isMixed
+      ? getMixedActivityRecommendationReason(
+          activity,
+          interest?.activities?.[activity.id] === "interested",
+          inferredActivityTag,
+          usedReasons
+        )
+      : getActivityRecommendationReason(
+          activity,
+          activity.styleTags.filter((t) => selectedTags.activities.includes(t)),
+          condition,
+          usedReasons
+        );
   const restaurantComment = (restaurant: Restaurant) =>
-    getRestaurantRecommendationReason(
-      restaurant,
-      restaurant.styleTags.filter((t) => selectedTags.restaurants.includes(t)),
-      condition,
-      hotel.area,
-      usedReasons
-    );
+    isMixed
+      ? getMixedRestaurantRecommendationReason(
+          restaurant,
+          interest?.restaurants?.[restaurant.id] === "interested",
+          inferredRestaurantTag,
+          usedReasons
+        )
+      : getRestaurantRecommendationReason(
+          restaurant,
+          restaurant.styleTags.filter((t) => selectedTags.restaurants.includes(t)),
+          condition,
+          hotel.area,
+          usedReasons
+        );
 
   const [d1, d2, d3, d4] = meta.dayDates;
 

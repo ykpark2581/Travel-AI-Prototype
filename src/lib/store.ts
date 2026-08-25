@@ -181,7 +181,7 @@ interface ExperimentState {
   // though the boolean gating logic doesn't: site-browsing checklists (see
   // runFlightsHotelsCollection/startExploring/runAiLedFlow) read as
   // dialogue.aiWorkingLabelCollecting, but runFinalPlanGeneration's
-  // checklist ("선택하신 장소 분석 중" etc.) isn't browsing anything
+  // checklist ("선택하신 액티비티·식당 확인 중" etc.) isn't browsing anything
   // anymore — it's synthesizing the actual itinerary, so it gets
   // dialogue.aiWorkingLabelPlanning instead. Set together with
   // `aiWorking: true` at every call site.
@@ -500,7 +500,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
       ),
     }));
 
-    runFinalPlanGeneration();
+    runMixedFinalPlanGeneration();
   }
 
   // Shared by every "AI worked internally, here's the checklist" moment —
@@ -557,30 +557,50 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // all anymore, that only ever shows inside the itinerary itself now (see
   // lib/itinerary.ts's check-in item). Any per-condition nuance lives in
   // the bottom AI-comment box instead (see components/workspace/panels/
-  // AiCommentSummary.tsx), not this line. Carries its own "확인했습니다"
-  // button (see confirmFinalPlan) — the itinerary panel itself never gets a
-  // "move on" action, only the chat message does. Human-led/mixed-led reach
-  // this via runFinalPlanGeneration below (their own checklist plays
-  // first); AI-led calls this directly since its single combined checklist
-  // (see runAiLedFlow) already covered the same ground.
+  // AiCommentSummary.tsx) or each condition's own checklist just before
+  // this (see finalPlanChecklistItems/mixedFinalPlanChecklistItems/
+  // aiLedFinalPlanChecklistItems), not this line. Carries its own
+  // "확인했습니다" button (see confirmFinalPlan) — the itinerary panel
+  // itself never gets a "move on" action, only the chat message does.
+  // Human-led/mixed-led reach this via runFinalPlanGeneration below (their
+  // own checklist plays first); AI-led calls this directly since its
+  // single combined checklist (see runAiLedFlow) already covered the same
+  // ground.
   function sendFinalPlanMessage() {
     sendAiMessage(dialogue.finalPlanMessage, () => finalizeItinerary(), { bookingConfirm: { confirmed: false } });
   }
 
-  // Human-led/mixed-led, step 3 — once exploration wraps up (human's day
-  // placement, mixed's own analysis), the AI folds flights/hotels into the
-  // final plan for the first time (see finalizeItinerary): a short
-  // checklist, then the shared final message + Day 1-4 itinerary (see
-  // sendFinalPlanMessage). AI-led never calls this — see runAiLedFlow
-  // instead.
+  // Human-led, step 3 — once the participant's own Day 1-4 placement wraps
+  // up, the AI folds flights/hotels into the final plan for the first time
+  // (see finalizeItinerary): a short checklist, then the shared final
+  // message + Day 1-4 itinerary (see sendFinalPlanMessage). Mixed-led uses
+  // its own near-identical version instead (see runMixedFinalPlanGeneration
+  // below — different checklist wording, plus a lead-in message this one
+  // doesn't have). AI-led never calls this — see runAiLedFlow instead.
   function runFinalPlanGeneration() {
     // dialogue.aiWorkingLabelPlanning, not …Collecting — by this point
     // there's nothing left to browse (explore already wrapped up), the AI
     // is synthesizing the actual itinerary (see this checklist's own
-    // items: "선택하신 장소 분석 중" etc.), so the workspace should say so
+    // items: "선택하신 액티비티·식당 확인 중" etc.), so the workspace should say so
     // rather than still claiming to be searching sites.
     set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true });
     postChecklist(dialogue.finalPlanChecklistItems, () => sendFinalPlanMessage());
+  }
+
+  // Mixed-led's own version of runFinalPlanGeneration above — same shape
+  // (checklist → shared final message/itinerary), but leads with a short
+  // chat message naming what's about to happen (see
+  // dialogue.mixedPreferenceAnalysisIntro) and runs a checklist worded
+  // around interpreting the 👍/👎 signal specifically (see
+  // dialogue.mixedFinalPlanChecklistItems), instead of the human-led
+  // checklist's "선택하신 액티비티·식당 확인 중" — mixed-led participants
+  // never picked a place directly, so that line would misstate what
+  // happened here. Called from finishMixedExploring only.
+  function runMixedFinalPlanGeneration() {
+    sendAiMessage(dialogue.mixedPreferenceAnalysisIntro, () => {
+      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true });
+      postChecklist(dialogue.mixedFinalPlanChecklistItems, () => sendFinalPlanMessage());
+    });
   }
 
   // Drives one category's steps (see lib/aiAutoplay.ts's

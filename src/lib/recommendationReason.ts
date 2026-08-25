@@ -24,7 +24,9 @@ export function pick<T>(seed: string, pool: T[]): T {
 // borrowing one never asserts something false about the item) — only once
 // BOTH are exhausted does it fall back to the plain deterministic pick,
 // accepting a rare repeat rather than an inaccurate claim.
-function pickUnused(seed: string, primaryPool: string[], used: Set<string>): string {
+// Exported for lib/mixedRecommendationReason.ts, which reuses the exact
+// same dedupe pattern for mixed-led's own comment pools.
+export function pickUnused(seed: string, primaryPool: string[], used: Set<string>): string {
   const tryPool = (pool: string[]): string | null => {
     if (pool.length === 0) return null;
     const start = hashString(seed) % pool.length;
