@@ -119,13 +119,13 @@ export const preSurveyGroups = [
 // form's internal question ids).
 export const conditionSurveyItems: QuestionnaireItem[] = [
   // Manipulation Check — one item per condition, asked of everyone
-  { id: "mc1", type: "likert", question: "이번 여행 계획에서 내가 주도하여 액티비티와 식당 후보를 탐색하고 결정했다." },
+  { id: "mc1", type: "likert", question: "이번 여행 계획에서 여러 액티비티와 식당 후보를 내가 직접 살펴보았다." },
   {
     id: "mc2",
     type: "likert",
-    question: "이번 여행 계획에서 나와 AI가 함께 액티비티와 식당 후보를 탐색하고 선택해 나갔다.",
+    question: "이번 여행 계획에서 어떤 액티비티와 식당을 일정에 포함할지 내가 직접 결정했다.",
   },
-  { id: "mc3", type: "likert", question: "이번 여행 계획에서 AI가 주도하여 액티비티와 식당 후보를 탐색하고 결정했다." },
+  { id: "mc3", type: "likert", question: "이번 여행 계획에서 일정에 포함할 액티비티와 식당을 AI가 선정했다." },
 
   // Dependent Variables (Complexity, Enjoyment, Serendipity, Preference Refinement, Perceived Control, Trust)
   { id: "dv1", type: "likert", question: "이번 여행 계획 과정에서 여러 정보를 이해하고 판단하는 것이 복잡하게 느껴졌다." },
