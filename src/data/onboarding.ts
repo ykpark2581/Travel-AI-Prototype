@@ -101,14 +101,15 @@ export const introductionContent = {
   title: "실험 진행 안내",
   points: [
     "본 실험에서는 총 3번의 여행 계획을 진행합니다.",
-    "각 여행 계획에서는 서로 다른 여행지를 대상으로 AI 여행 도우미와 함께 여행 일정을 구성하게 됩니다.",
-    "각 여행 계획이 끝난 후에는 방금 경험한 여행 계획 방식에 대한 간단한 설문에 응답해 주세요.",
+    "각 여행 계획에서는 서로 다른 여행지를 대상으로 AI 여행 플래너와 함께 여행 일정을 구성하게 됩니다.",
+    "각 여행 계획이 끝난 후에는 방금 경험한 여행 계획 방식에 대한 간단한 설문에 응답하며, 모든 여행 계획이 끝난 후에는 간단한 마무리 설문이 진행됩니다.",
+    "실험 진행 중 제시되는 후보와 최종 일정에 대한 추가 검색이나 수정 기능은 제공되지 않습니다.",
   ],
   // Rendered as its own emphasized callout (see IntroductionScreen.tsx),
   // deliberately styled differently from the bullet list above — this is
   // the one line asking for a specific mindset while doing the task, not
   // another fact about the study's structure, so it shouldn't just read as
-  // a 4th bullet.
-  note: "실제로 해당 여행을 떠난다고 생각하고 진행해 주세요.",
+  // a 5th bullet.
+  note: "실제로 해당 여행을 떠난다고 생각하고 자연스럽게 진행해 주세요.",
   continueLabel: "실험 시작하기",
 };
