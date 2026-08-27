@@ -42,7 +42,11 @@ export const preSurveyItems: QuestionnaireItem[] = [
     id: "age",
     type: "choice",
     question: "귀하의 연령대를 선택해주세요.",
-    options: ["20대", "30대", "40대", "50대 이상"],
+    // Matches the study's actual recruitment range (see
+    // data/onboarding.ts's consentContent section 2 — "만 20~49세 성인
+    // 60명") — no 50대 option since nobody outside that range should ever
+    // be answering this.
+    options: ["20대", "30대", "40대"],
   },
   {
     id: "explore_breadth",
