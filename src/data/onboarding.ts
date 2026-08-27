@@ -5,9 +5,11 @@
 // both have 9 (confirmed correct by the researcher — mc3 was re-added to
 // conditionSurveyItems after the PDF was originally drafted, see that
 // array's own comment). Everything else here still matches the PDF word for
-// word. The source PDF itself still reads 10/8 — get it amended to 9/9 with
-// the IRB to keep the formally-approved document in sync with what
-// participants actually see here.
+// word, except section 8 (연구 문의), which moved out of `paragraphs` into
+// its own `contactBox` below (still the same words, just a different
+// container). The source PDF itself still reads 10/8 — get it amended to
+// 9/9 with the IRB to keep the formally-approved document in sync with
+// what participants actually see here.
 export const consentContent = {
   title: "연구 참여 안내 및 동의서",
   paragraphs: [
@@ -70,21 +72,24 @@ export const consentContent = {
         "법령에 따라 필요한 경우 개인정보가 제공될 수 있습니다. 또한 연구 수행과 자료의 신뢰성을 검증하기 위해 모니터링 요원, 점검자 및 연세대학교 생명윤리위원회가 관련 규정에서 정한 범위 안에서 연구대상자의 비밀을 침해하지 않는 방식으로 연구 관련 기록을 열람할 수 있습니다.",
       ],
     },
-    {
-      heading: "8. 연구 문의",
-      body: [
-        "본 연구와 관련하여 궁금한 사항이나 연구 참여 중 문제가 발생한 경우 아래 연구담당자에게 문의해 주시기 바랍니다.",
-        "연구담당자 연락처",
-        "연세대학교 정보대학원 axlab (010-7323-2581)",
-        // ConsentScreen.tsx auto-links any email address found in a body
-        // line (see its linkifyEmail helper) — no special per-paragraph
-        // field needed the way an earlier version of this content required.
-        "연구자 박윤경 (ykpark@yonsei.ac.kr)",
-        "연구대상자 권리 정보에 관한 문의처",
-        "연세대학교 생명윤리위원회 (02-2123-5143)",
-      ],
-    },
   ],
+  // The former "8. 연구 문의" numbered section, pulled out of `paragraphs`
+  // and given its own distinct callout box instead (see ConsentScreen.tsx
+  // — same bordered/tinted treatment as introductionContent's note below)
+  // so contact info reads as a standing reference at the bottom of the
+  // page rather than just one more numbered item in the list above it. No
+  // heading/number of its own on purpose. `lines` renders as
+  // "{label}: {value}" pairs, in order; ConsentScreen.tsx auto-links any
+  // email address found in a value (see its linkifyEmail helper).
+  contactBox: {
+    intro: "본 연구와 관련하여 궁금한 사항이나 연구 참여 중 문제가 발생한 경우 아래 연구담당자에게 문의해 주시기 바랍니다.",
+    lines: [
+      { label: "연구자", value: "박윤경" },
+      { label: "소속", value: "연세대학교 정보대학원 / axlab" },
+      { label: "문의처", value: "ykpark@yonsei.ac.kr" },
+      { label: "연구대상자 권리 정보에 관한 문의처", value: "연세대학교 생명윤리위원회 (02-2123-5143)" },
+    ],
+  },
   // Matches the source document's own consent table exactly — two items,
   // both required ("모든 항목에 동의하셔야 연구에 참여하실 수 있습니다."),
   // rendered here as checkboxes rather than the PDF's 동의한다/동의하지

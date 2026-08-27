@@ -68,16 +68,38 @@ export function typingDurationMs(text: string): number {
   return baseCost + sentenceBonus + lineBreakBonus;
 }
 
-// How long each checklist item holds before the next one reveals (see
-// lib/store.ts's runChecklist) — 5s per line ("hotely.com 사이트 탐색
-// 중" etc.). Was 2s, but that read as too fast to actually read each line
-// rather than just watch it flash by — back when checklists ran up to 9
-// lines in one back-to-back sequence (AI-led's old combined flow) 2s kept
-// the total wait from stretching to ~45s, but every checklist is now split
-// short (3-5 lines — see e.g. dialogue.mixedFinalPlanChecklistItems/
-// aiLedFinalPlanChecklistItems), so a slower per-line pace no longer
-// balloons the total wait the way it would have before.
+// The floor under checklistItemDelayMs below — also still what most
+// checklist items actually get, since most lines are short (e.g.
+// "hotely.com 사이트 탐색 중"). Was a flat 2s for every item regardless
+// of length, then a flat 5s — but the final-plan checklists' own longer,
+// clause-bearing lines (e.g. "액티비티·식당과의 동선을 고려하여
+// 항공편·숙소 최종 비교 중") still read as rushed even at a flat 5s,
+// while bumping every OTHER item (the short "~탐색 중"/"~완료" ones) to
+// match would have made those drag. checklistItemDelayMs replaced that
+// one-size-fits-all gap with a per-item length-based one, the same
+// approach readingDelayMs already uses for chat bubbles — this constant
+// stays as the name/floor.
 export const CHECKLIST_ITEM_MS = 5000;
+
+// How long a checklist item holds before the next one reveals (see
+// lib/store.ts's runChecklist), sized to that item's own length so a short
+// status line ("sky.com 사이트 탐색 중") and a longer reasoning line
+// ("액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중") don't
+// get the same pause. ~3.6 chars/sec is deliberately slower than
+// readingDelayMs's 12 chars/sec — checklist lines are short declarative
+// claims a participant is meant to actually register (and maybe judge),
+// not prose to read at a normal clip, so the same reading-speed formula
+// would barely nudge these lines above the floor at all. Every line at or
+// under ~18 non-space characters (every "~탐색 중"/"~완료" line in the
+// app today) naturally floors out to CHECKLIST_ITEM_MS unchanged; only
+// meaningfully longer lines actually slow down.
+const CHECKLIST_ITEM_CHARS_PER_SEC = 3.6;
+const CHECKLIST_ITEM_DELAY_MS_MAX = 9000;
+export function checklistItemDelayMs(text: string): number {
+  const chars = text.replace(/\s+/g, "").length;
+  const estimated = (chars / CHECKLIST_ITEM_CHARS_PER_SEC) * 1000;
+  return Math.min(CHECKLIST_ITEM_DELAY_MS_MAX, Math.max(CHECKLIST_ITEM_MS, estimated));
+}
 
 // Extra floor under the whole checklist card's visible time (see
 // postChecklist) — mostly redundant now that every item alone takes

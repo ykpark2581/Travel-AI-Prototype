@@ -27,7 +27,7 @@ import {
   AUTOPLAY_DETAIL_MS,
   AUTOPLAY_SKIM_MS,
   AUTOPLAY_STEP_GAP_MS,
-  CHECKLIST_ITEM_MS,
+  checklistItemDelayMs,
   MIN_PROCESSING_MS,
   readingDelayMs,
   STAGE_SKELETON_MS,
@@ -526,7 +526,19 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // flights/hotels, explore, final-plan, AI-led's merged one — none of
   // which have a browsable workspace behind them (see `aiWorking`).
   // `startedAt` anchors the MIN_PROCESSING_MS floor enforced below, timed
-  // from when the checklist card first appeared, not from this call.
+  // from when the checklist card first appeared, not from this call. The
+  // pause before flipping the item that's NOW showing (ChecklistCard's
+  // spinner "current" line — items[revealedCount], i.e. items[index + 1]
+  // once this call's `set` below runs) over to complete is sized to THAT
+  // item's own length (see checklistItemDelayMs) — a short "hotely.com
+  // 사이트 탐색 중" line floors out at the same pace as before, but a
+  // longer reasoning line (e.g. mixed-led's "선호 패턴을 파악하여
+  // 액티비티·식당 후보 선정 중") holds a beat longer instead of getting
+  // swept past at the same fixed pace as every short line around it. Falls
+  // back to items[index] (the item this call just completed) once there's
+  // no next item to show as current — the delay before the checklist's
+  // final onDone-triggering call, letting the last "완료" line linger
+  // rather than being timed off nothing.
   function runChecklist(messageId: string, items: string[], index: number, startedAt: number, onDone: () => void) {
     if (index >= items.length) {
       const elapsed = Date.now() - startedAt;
@@ -538,7 +550,10 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
         m.id === messageId && m.checklist ? { ...m, checklist: { ...m.checklist, revealedCount: index + 1 } } : m
       ),
     }));
-    setTimeout(() => runChecklist(messageId, items, index + 1, startedAt, onDone), CHECKLIST_ITEM_MS);
+    setTimeout(
+      () => runChecklist(messageId, items, index + 1, startedAt, onDone),
+      checklistItemDelayMs(items[index + 1] ?? items[index])
+    );
   }
 
   // Posts the "" + checklist-payload message, then progressively reveals its
@@ -547,13 +562,26 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // if the items themselves reveal faster than that. Its own appearance is
   // already paced off whatever message precedes it (see sendAiMessage's
   // default readingDelayMs behavior) — no explicit delay needed here.
+  // The very first item shows as ChecklistCard's "current" spinner line the
+  // instant the card renders (revealedCount starts at 0, and
+  // `items[revealedCount]` is what that component shows as in-progress) —
+  // so THIS delay, before runChecklist(index 0) flips it to complete, is
+  // what actually governs how long item[0] stays readable, the same as
+  // checklistItemDelayMs governs every item after it (see runChecklist).
+  // Used to be a flat 500ms regardless of length, which shortchanged a
+  // longer first item (e.g. mixed-led's "선호 패턴을 파악하여
+  // 액티비티·식당 후보 선정 중") the same length-aware pause every other
+  // item in the list gets.
   function postChecklist(items: string[], onDone: () => void) {
     const checklistId = makeId();
     sendAiMessage(
       "",
       () => {
         const startedAt = Date.now();
-        setTimeout(() => runChecklist(checklistId, items, 0, startedAt, onDone), 500);
+        setTimeout(
+          () => runChecklist(checklistId, items, 0, startedAt, onDone),
+          checklistItemDelayMs(items[0] ?? "")
+        );
       },
       { id: checklistId, checklist: { items, revealedCount: 0 } }
     );

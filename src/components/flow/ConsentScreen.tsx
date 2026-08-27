@@ -8,8 +8,8 @@ import { consentContent } from "@/data/onboarding";
 import { useExperimentStore } from "@/lib/store";
 
 // Turns a bare email address inside `text` into a clickable mailto link —
-// e.g. consentContent's "연구자 박윤경 (ykpark@yonsei.ac.kr)" line (see
-// data/onboarding.ts) — without needing a dedicated per-paragraph `email`
+// e.g. consentContent.contactBox's "문의처: ykpark@yonsei.ac.kr" line (see
+// data/onboarding.ts) — without needing a dedicated per-field `email`
 // field the way an earlier version of this content did.
 function linkifyEmail(text: string) {
   return text.split(/([\w.+-]+@[\w-]+\.[\w.-]+)/g).map((part, i) =>
@@ -46,6 +46,23 @@ export function ConsentScreen() {
             ))}
           </div>
         ))}
+      </div>
+
+      {/* Former "8. 연구 문의" section — its own distinct callout box
+          (same bordered/tinted treatment as IntroductionScreen's note),
+          not just another numbered item in the list above, so contact info
+          reads as a standing reference at the bottom of the page. */}
+      <div className="mt-6 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm leading-relaxed">
+        <p className="text-muted-foreground">{consentContent.contactBox.intro}</p>
+        <div className="mt-2 space-y-1">
+          {consentContent.contactBox.lines.map((line) => (
+            <p key={line.label}>
+              <span className="font-medium text-foreground">{line.label}</span>
+              <span className="text-muted-foreground">: </span>
+              {linkifyEmail(line.value)}
+            </p>
+          ))}
+        </div>
       </div>
 
       <div className="mt-8 space-y-3 border-t pt-6">

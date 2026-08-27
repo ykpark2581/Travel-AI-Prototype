@@ -129,7 +129,7 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
 
   // Dependent Variables (Complexity, Enjoyment, Serendipity, Preference Refinement, Perceived Control, Trust)
   { id: "dv1", type: "likert", question: "이번 여행 계획 과정에서 여러 정보를 이해하고 판단하는 것이 복잡하게 느껴졌다." },
-  { id: "dv6", type: "likert", question: "AI와 함께 다양한 여행 대안들을 둘러보는 탐색 과정이 즐거웠다" },
+  { id: "dv6", type: "likert", question: "이번 여행 계획 과정에서 다양한 여행 대안들을 둘러보는 탐색 과정이 즐거웠다" },
   {
     id: "dv2",
     type: "likert",
