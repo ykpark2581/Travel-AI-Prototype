@@ -19,11 +19,12 @@ export type DestinationId = "vietnam" | "bangkok" | "taiwan";
 
 // The shared style vocabulary behind every condition's final selection —
 // distinct from `tags` (which still drives the specific recommendation-
-// reason logic in lib/recommendationReason.ts). How each condition arrives
-// at a set of these differs: Mixed-led infers it from browsing behavior
-// (see lib/browsingInference.ts); AI-led asks for it directly, up to 2
-// tags (see StyleQuestionPayload below, data/dialogue.ts's
-// aiLedStyleQuestionIntro).
+// reason logic in lib/recommendationReason.ts). Every condition is asked
+// directly now, up to 2 tags (see StyleQuestionPayload below,
+// data/dialogue.ts's styleQuestion) — but only AI-led's ranking actually
+// uses the answer; mixed-led still infers its own tag from browsing
+// behavior instead (see lib/browsingInference.ts), and human-led doesn't
+// rank by tag at all.
 export type TravelStyleTag = "자연/휴식" | "문화/역사" | "식당/미식" | "액티비티/체험" | "감성/사진 명소";
 
 export interface Flight {
@@ -100,8 +101,8 @@ export interface Restaurant {
 export interface DestinationMeta {
   id: DestinationId;
   // The destination as shown mid-flow (see dialogue.ts's
-  // mixedExplorationPrompt/humanExploreIntro/aiLedStyleQuestionIntro,
-  // ItineraryPanel.tsx, itinerary.ts, TransitionScreen.tsx) — always the
+  // explorationCollectionIntro, ItineraryPanel.tsx, itinerary.ts,
+  // TransitionScreen.tsx) — always the
   // actual city (다낭/방콕/타이베이), never the country, so every one of
   // those spots reads consistently regardless of which destination is
   // active. `name` below is kept distinct for the one place that DOES want
@@ -199,24 +200,27 @@ export interface DayAssignment {
 }
 export type DayPlan = Record<number, DayAssignment>;
 
-// AI-led only, asked once (not per-stage) right after flights/hotels —
-// "동행자" (who they're traveling with). Deliberately the only upfront
-// question AI-led ever asks alongside styleQuestion below, and a light one
-// at that: a single-select pick, purely narrative — unlike before, the
-// answer no longer implies a style tag (see StyleQuestionPayload, which
-// replaced that inference with an explicit question instead).
+// Every condition, asked once at the start of the activity/restaurant
+// stage — after flights/hotels, before styleQuestion below (see
+// lib/store.ts's beginActivityRestaurantStage) — "동행자" (who they're
+// traveling with). A light question: a single-select pick, purely
+// narrative — unlike before, the answer no longer implies a style tag (see
+// StyleQuestionPayload, which replaced that inference with an explicit
+// question instead).
 export interface CompanionQuestionPayload {
   options: string[];
   selected: string;
   confirmed: boolean;
 }
 
-// AI-led only — replaces the old companion-implied style guess (see
-// lib/companionStyle.ts, now deleted) with an explicit question, asked
-// once the candidate catalog is on screen (see lib/store.ts's
-// runAiLedFlow): which TravelStyleTag(s) — up to 2 — should the AI weigh
-// when it browses/selects on the participant's behalf (see
-// lib/aiAutoplay.ts). Multi-select, unlike CompanionQuestionPayload above.
+// Every condition's second upfront question, asked right after the
+// companion question confirms (see lib/store.ts's confirmStyleQuestion) —
+// used to be AI-led only, replacing the old companion-implied style guess
+// (see lib/companionStyle.ts, now deleted) with an explicit question. Now
+// asked of every condition, though only AI-led's ranking actually uses the
+// answer: which TravelStyleTag(s) — up to 2 — should the AI weigh when it
+// browses/selects on the participant's behalf (see lib/aiAutoplay.ts).
+// Multi-select, unlike CompanionQuestionPayload above.
 export interface StyleQuestionPayload {
   options: TravelStyleTag[];
   selected: TravelStyleTag[];
@@ -250,7 +254,7 @@ export interface DaySelectionPayload {
 }
 
 // Mixed-led only — attached to the free-browse prompt message (see
-// lib/store.ts's startExploring). The workspace's card grid stays
+// lib/store.ts's confirmStyleQuestion). The workspace's card grid stays
 // selection-only (see ActivityCard/RestaurantCard's 👍/👎), so the "move
 // on" action itself lives here instead. Same two-stage shape as
 // DaySelectionPayload above and for the same reason — see that type's own

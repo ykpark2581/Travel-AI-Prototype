@@ -20,7 +20,7 @@ import type { ExplorationStage } from "@/types";
 // Human-led, Mixed-led, and AI-led's shared activities/restaurants
 // catalog — replaces the old separate ActivitiesPanel/RestaurantsPanel
 // entirely, and (as of AI-led's autoplay rework — see lib/store.ts's
-// runAiLedFlow) also replaces AI-led's old chat-only "never shows a
+// confirmStyleQuestion) also replaces AI-led's old chat-only "never shows a
 // catalog at all" behavior. Split only by an in-panel tab, never a
 // separate stage. Which tab is showing lives entirely in the store now
 // (see exploreTab) — human-led/mixed-led switch it via a workspace click

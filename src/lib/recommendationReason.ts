@@ -83,8 +83,8 @@ const GENERIC_SAFE_REASONS = FALLBACK_REASONS;
 // Mixed-led only — its matched tag comes from the participant's own 👍
 // interest (see lib/browsingInference.ts), so "선택하신" is accurate here.
 // AI-led's own style tags are now participant-picked too (see
-// data/dialogue.ts's aiLedStyleQuestionIntro, lib/store.ts's
-// confirmStyleQuestion) but per-STYLE, never per-item — the participant
+// data/dialogue.ts's styleQuestion, lib/store.ts's confirmStyleQuestion)
+// but per-STYLE, never per-item — the participant
 // never actually picked THIS specific place, so "선택하신 관심사와 유사한"
 // would still overstate what they did. AI-led simply never gets this
 // reason (see buildQualifyingReasons below) and falls back to the

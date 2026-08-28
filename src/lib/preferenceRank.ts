@@ -3,8 +3,8 @@
 // cards/ActivityCard.tsx/RestaurantCard.tsx) — on top of the style tag
 // inferred from that same signal (see lib/browsingInference.ts). AI-led
 // passes no interest at all; it ranks purely by the style tag(s) the
-// participant directly picked (see data/dialogue.ts's
-// aiLedStyleQuestionIntro, lib/store.ts's confirmStyleQuestion). Human-led
+// participant directly picked (see data/dialogue.ts's styleQuestion,
+// lib/store.ts's confirmStyleQuestion). Human-led
 // never calls this — its plan comes straight from the participant's own
 // Day 1-4 placement instead (see lib/itinerary.ts's
 // generateItineraryFromDayPlan).

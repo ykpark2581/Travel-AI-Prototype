@@ -11,7 +11,7 @@ import {
 import type { MixedExploreDonePayload } from "@/types";
 
 // Mixed-led only — the free-browse prompt's own two-stage "move on" button,
-// attached to that chat message (see lib/store.ts's startExploring). Lives
+// attached to that chat message (see lib/store.ts's confirmStyleQuestion). Lives
 // here instead of the workspace so the explore panel stays browse/select
 // only (see ExplorePanel.tsx's own comment) — every "move on" action across
 // the whole flow lives in chat. Same two-stage shape as

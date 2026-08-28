@@ -133,8 +133,8 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   { id: "mc3", type: "likert", question: "이번 여행 계획에서 일정에 포함할 액티비티와 식당을 AI가 선정했다." },
 
   // Dependent Variables (Complexity, Enjoyment, Serendipity, Preference Refinement, Perceived Control, Trust, Overall Satisfaction)
-  { id: "dv1", type: "likert", question: "이번 여행 계획 과정에서 여러 정보를 이해하고 판단하는 것이 복잡하게 느껴졌다." },
-  { id: "dv6", type: "likert", question: "이번 여행 계획 과정에서 다양한 여행 대안들을 둘러보는 탐색 과정이 즐거웠다" },
+  { id: "dv1", type: "likert", question: "이번 여행 계획에서 액티비티와 식당 후보를 살펴보는 데 피로감을 느꼈다." },
+  { id: "dv6", type: "likert", question: "이번 여행 계획에서 다양한 액티비티와 식당 후보를 살펴보는 과정이 즐거웠다." },
   {
     id: "dv2",
     type: "likert",
@@ -143,7 +143,7 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   { id: "dv4", type: "likert", question: "다양한 선택지를 살펴보면서 내가 원하는 것을 더욱 분명히 할 수 있었다." },
   { id: "dv7", type: "likert", question: "이번 여행 계획 과정에서 내가 원하는 방향으로 계획에 영향을 줄 수 있다고 느꼈다." },
   { id: "dv8", type: "likert", question: "이번 여행 계획에서 AI가 구성한 최종 일정을 신뢰할 수 있다고 느꼈다." },
-  { id: "dv9", type: "likert", question: "이번 여행 계획 방식에 전반적으로 만족했다." },
+  { id: "dv9", type: "likert", question: "AI와 함께 여행 계획을 완성해 나가는 이 방식에 전반적으로 만족했다." },
 ];
 
 // Asked once, at the very end, after all three conditions — unlike every

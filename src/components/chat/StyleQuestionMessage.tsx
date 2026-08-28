@@ -7,16 +7,19 @@ import { useExperimentStore } from "@/lib/store";
 import { companionConfirmLabel, styleTagLabel } from "@/data/dialogue";
 import type { StyleQuestionPayload, TravelStyleTag } from "@/types";
 
-// AI-led only — the one explicit preference question this condition asks
-// (see data/dialogue.ts's aiLedStyleQuestionIntro, lib/store.ts's
-// confirmStyleQuestion), replacing the old companion-implied style guess.
-// Multi-select, capped at 2 (see MAX_TAGS) — unlike
-// components/chat/CompanionQuestionMessage.tsx's single-select, tapping an
-// already-picked tag again deselects it, and once 2 are picked, tapping a
-// third does nothing until one is freed up first. Confirming echoes the
-// pick as a real user-role chat bubble (see confirmStyleQuestion) rather
-// than a pill here, so this renders nothing once confirmed — just hides
-// its own chips/button, same as CompanionQuestionMessage.
+// Every condition's second upfront question, asked right after the
+// companion question confirms (see data/dialogue.ts's styleQuestion,
+// lib/store.ts's postStyleQuestion/confirmStyleQuestion) — replacing the
+// old companion-implied style guess. Used to be AI-led only; now asked of
+// every condition, though only AI-led's ranking actually uses the answer
+// (see confirmStyleQuestion's own comment). Multi-select, capped at 2 (see
+// MAX_TAGS) — unlike components/chat/CompanionQuestionMessage.tsx's
+// single-select, tapping an already-picked tag again deselects it, and once
+// 2 are picked, tapping a third does nothing until one is freed up first.
+// Confirming echoes the pick as a real user-role chat bubble (see
+// confirmStyleQuestion) rather than a pill here, so this renders nothing
+// once confirmed — just hides its own chips/button, same as
+// CompanionQuestionMessage.
 const MAX_TAGS = 2;
 
 export function StyleQuestionMessage({ payload }: { payload: StyleQuestionPayload }) {

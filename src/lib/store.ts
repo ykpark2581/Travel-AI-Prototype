@@ -140,7 +140,7 @@ interface ExperimentState {
   // has a simple, condition-agnostic "how many did you end up with" count.
   // Mixed-led/AI-led: the final ranked top-N set that actually made it into
   // the itinerary (set once exploration wraps up — see
-  // finishMixedExploring/runAiLedFlow).
+  // finishMixedExploring/confirmStyleQuestion's AI-led branch).
   likedActivityIds: string[];
   likedRestaurantIds: string[];
   // Mixed-led only — its one explicit signal, a 👍/👎 per card (see
@@ -158,10 +158,11 @@ interface ExperimentState {
   // Human-led only — which day each selected item has been placed into (see
   // toggleDayItem). Unassigned items simply don't appear in the final plan.
   dayPlan: DayPlan;
-  // AI-led only — the one thing every condition asks upfront ("동행자"),
-  // purely narrative now (see confirmCompanion) — AI-led's actual style
-  // signal comes from styleQuestion instead (see confirmStyleQuestion).
-  // Empty until confirmCompanion runs.
+  // Every condition's own "동행자" answer, asked at the start of the
+  // activity/restaurant stage (see beginActivityRestaurantStage) — purely
+  // narrative now (see confirmCompanion); nobody's ranking uses it (see
+  // styleQuestion/confirmStyleQuestion for the answer that actually feeds
+  // AI-led's ranking). Empty until confirmCompanion runs.
   companion: string;
 
   // True whenever the AI is in the middle of any "processing" beat —
@@ -180,19 +181,19 @@ interface ExperimentState {
   // its own field (not a hardcoded string in BrowserWorkspace) because the
   // honest description of "what the AI is doing" differs by phase even
   // though the boolean gating logic doesn't: site-browsing checklists (see
-  // runFlightsHotelsCollection/startExploring/runAiLedFlow) read as
-  // dialogue.aiWorkingLabelCollecting, but runFinalPlanGeneration's
+  // runFlightsHotelsCollection/runAiLedFlightsHotels/confirmStyleQuestion)
+  // read as dialogue.aiWorkingLabelCollecting, but runFinalPlanGeneration's
   // checklist ("선택하신 액티비티·식당 확인 중" etc.) isn't browsing anything
   // anymore — it's synthesizing the actual itinerary, so it gets
   // dialogue.aiWorkingLabelPlanning instead. Set together with
   // `aiWorking: true` at every call site.
   aiWorkingLabel: string;
   // Whether AiWorkingPanel's icon should spin (default true at every
-  // existing call site) — false only for AI-led's style-question wait (see
-  // runAiLedFlow), where aiWorking stays true to keep the catalog hidden
-  // (see showingCatalog in BrowserWorkspace.tsx) but the search itself has
-  // already finished, so a still-spinning icon would contradict the
-  // "완료" label sitting right next to it.
+  // existing call site) — false only for AI-led's brief post-search hold
+  // (see confirmStyleQuestion), where aiWorking stays true to keep the
+  // catalog hidden (see showingCatalog in BrowserWorkspace.tsx) but the
+  // search itself has already finished, so a still-spinning icon would
+  // contradict the "완료" label sitting right next to it.
   aiWorkingSpinning: boolean;
 
   // AI-led's watch-only browsing sequence (see lib/aiAutoplay.ts,
@@ -273,9 +274,12 @@ interface ExperimentState {
   sendPendingPrompt: () => void;
 
   confirmCompanion: (companion: string) => void;
-  // AI-led only — the style question's own confirm action (see
-  // components/chat/StyleQuestionMessage.tsx) — up to 2 TravelStyleTag
-  // values, used to rank both catalogs before runAiAutoplay sweeps them.
+  // Every condition's style question, asked right after the companion
+  // question confirms — its own confirm action (see components/chat/
+  // StyleQuestionMessage.tsx) — up to 2 TravelStyleTag values. Only
+  // AI-led's ranking actually uses the answer (to rank both catalogs before
+  // runAiAutoplay sweeps them); human-led/mixed-led just echo it in chat
+  // and move on to the shared candidate-collection checklist.
   confirmStyleQuestion: (tags: TravelStyleTag[]) => void;
   // Human-led/mixed-led only — the day/explore prompt's own first-stage
   // "액티비티 완료" button (see components/chat/DaySelectionMessage.tsx /
@@ -409,8 +413,8 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
 
   // Pure navigation only — updates which stage is active/unlocked. What (if
   // anything) happens when a stage begins is each condition's own concern
-  // (see startExploring/runAiLedFlow), not baked in here, so this is safe to
-  // call from anywhere that just needs to move the stepper forward.
+  // (see confirmStyleQuestion), not baked in here, so this is safe to call
+  // from anywhere that just needs to move the stepper forward.
   function enterStage(stageId: StageId) {
     set((state) => ({
       unlockedStages: state.unlockedStages.includes(stageId)
@@ -420,62 +424,58 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     }));
   }
 
-  // Human-led and Mixed-led both start exploration the same way: a site
-  // checklist (see postChecklist) right away — no separate lead-in bubble
-  // of its own, since runFlightsHotelsCollection's own closing line already
-  // covers "here's what I'm about to look into next" (see the merged
-  // dialogue.flightsHotelsCollectingComplete) and nothing requiring
-  // participant action happens in between, so a second bubble here would
-  // just be restating the same beat — shown only in chat as its own
-  // standalone card (see components/chat/ChecklistCard.tsx), with the
-  // workspace just showing a generic "processing" panel the whole time (see
-  // `aiWorking` / BrowserWorkspace). Once that finishes, human-led gets the
-  // first of its day-by-day prompts (see confirmDaySelection), mixed-led
-  // gets its free-browse prompt with no time limit — it moves on via
-  // ExplorePanel's own persistent bottom button whenever the participant is
-  // ready (see finishMixedExploring). AI-led never calls this — see
-  // runAiLedFlow instead.
-  function startExploring() {
-    enterStage("explore");
-    set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
-
-    postChecklist(dialogue.explorationCollectionChecklistItems, () => {
-      set({ aiWorking: false, loadingStage: "explore" });
-      setTimeout(() => set({ loadingStage: null }), STAGE_SKELETON_MS);
-
-      const state = get();
-      const city = state.destinationBundle.meta.city;
-      if (state.condition === "human") {
-        set({ humanDayIndex: 1 });
-        sendAiMessage(dialogue.humanExploreIntro(city), undefined, {
-          daySelection: { day: 1, activityStageConfirmed: false, confirmed: false },
-        });
-      } else {
-        sendAiMessage(dialogue.mixedExplorationPrompt(city), undefined, {
-          mixedExploreDone: { activityStageConfirmed: false, confirmed: false },
-        });
-      }
-    });
-  }
-
   // Human-led and Mixed-led only, right after the scenario prompt is sent —
   // a short, purely narrative "AI already looked into flights/hotels" beat
   // with no user interaction and no real decision made yet (that only
   // happens in runFinalPlanGeneration, once the AI knows what the
   // participant actually wants to do). AI-led skips this entirely — its own
-  // single combined checklist (see runAiLedFlow) already covers it.
+  // near-identical version is runAiLedFlightsHotels below. No companion
+  // echo any more (see dialogue.flightsHotelsCollectingIntro's own
+  // comment) — the companion question now comes later, at the start of the
+  // activity/restaurant stage (see beginActivityRestaurantStage below), so
+  // there's nothing to echo yet at this point.
   function runFlightsHotelsCollection(onDone: () => void) {
     // `aiWorking` flips only once flightsHotelsCollectingIntro has actually
     // landed in chat (inside this `after` callback), not the instant this
     // function is called — setting it any earlier showed the workspace's
     // "AI가 사이트를 탐색 중입니다." before the participant had even read
     // the message explaining that's what's about to happen.
-    const companion = get().companion;
-    sendAiMessage(dialogue.flightsHotelsCollectingIntro(companion), () => {
+    sendAiMessage(dialogue.flightsHotelsCollectingIntro, () => {
       set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
       postChecklist(dialogue.flightsHotelsCollectingItems, () => {
-        sendAiMessage(dialogue.flightsHotelsCollectingComplete, onDone);
+        set({ aiWorking: false });
+        onDone();
       });
+    });
+  }
+
+  // AI-led's own copy of runFlightsHotelsCollection above — same shape, its
+  // own intro/checklist wording (see dialogue.aiLedFlightsHotelsIntro/
+  // aiLedFlightsHotelsChecklistItems). Called from beginExploration below,
+  // same as runFlightsHotelsCollection is for human-led/mixed-led.
+  function runAiLedFlightsHotels(onDone: () => void) {
+    sendAiMessage(dialogue.aiLedFlightsHotelsIntro, () => {
+      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
+      postChecklist(dialogue.aiLedFlightsHotelsChecklistItems, () => {
+        set({ aiWorking: false });
+        onDone();
+      });
+    });
+  }
+
+  // Shared by all three conditions — the start of the activity/restaurant
+  // stage, called once flights/hotels wraps up (see beginExploration
+  // below). Sends the shared intro (see
+  // dialogue.activityRestaurantStageIntro), then the companion question
+  // (see postCompanionQuestion) — the first of the two upfront questions
+  // every condition now answers before the candidate search itself begins
+  // (see confirmCompanion/confirmStyleQuestion for what happens once both
+  // are answered, and where the actual explorationCollectionChecklistItems
+  // checklist + candidate reveal now live — this function stops right
+  // after posting the companion question).
+  function beginActivityRestaurantStage() {
+    sendAiMessage(dialogue.activityRestaurantStageIntro, () => {
+      postCompanionQuestion();
     });
   }
 
@@ -587,14 +587,27 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     );
   }
 
-  // Every condition, asked once right after the scenario prompt — before the
-  // AI does anything else (flights/hotels included). Purely narrative for
-  // all three now — nobody's ranking uses the answer (see confirmCompanion;
-  // AI-led's own style signal comes from styleQuestion instead, asked
-  // separately once the catalog is on screen — see confirmStyleQuestion).
+  // Every condition, asked once at the start of the activity/restaurant
+  // stage — after flights/hotels, right after
+  // dialogue.activityRestaurantStageIntro (see beginActivityRestaurantStage
+  // above). Purely narrative for all three now — nobody's ranking uses the
+  // answer (see confirmCompanion; the style question that follows is what
+  // actually feeds AI-led's ranking — see confirmStyleQuestion).
   function postCompanionQuestion() {
     sendAiMessage(dialogue.companionQuestion, undefined, {
       companionQuestion: { options: [...dialogue.companionOptions], selected: "", confirmed: false },
+    });
+  }
+
+  // Every condition's second upfront question, asked once the companion
+  // question confirms (see confirmCompanion below) — up to 2
+  // TravelStyleTag values (see components/chat/StyleQuestionMessage.tsx).
+  // Used to be AI-led only — now common to every condition (see
+  // dialogue.styleQuestion's own comment); confirmStyleQuestion below is
+  // where the answer actually gets used, per condition.
+  function postStyleQuestion() {
+    sendAiMessage(dialogue.styleQuestion, undefined, {
+      styleQuestion: { options: [...dialogue.styleTagOptions], selected: [], confirmed: false },
     });
   }
 
@@ -610,9 +623,9 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // "확인했습니다" button (see confirmFinalPlan) — the itinerary panel
   // itself never gets a "move on" action, only the chat message does.
   // Human-led/mixed-led reach this via runFinalPlanGeneration below (their
-  // own checklist plays first); AI-led calls this directly since its
-  // single combined checklist (see runAiLedFlow) already covered the same
-  // ground.
+  // own checklist plays first); AI-led calls this directly from
+  // confirmStyleQuestion's own final-plan checklist, once runAiAutoplay
+  // finishes sweeping the catalog.
   function sendFinalPlanMessage() {
     sendAiMessage(dialogue.finalPlanMessage, () => finalizeItinerary(), { bookingConfirm: { confirmed: false } });
   }
@@ -623,7 +636,8 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // message + Day 1-4 itinerary (see sendFinalPlanMessage). Mixed-led uses
   // its own near-identical version instead (see runMixedFinalPlanGeneration
   // below — different checklist wording, plus a lead-in message this one
-  // doesn't have). AI-led never calls this — see runAiLedFlow instead.
+  // doesn't have). AI-led never calls this — see confirmStyleQuestion's own
+  // final-plan checklist instead.
   function runFinalPlanGeneration() {
     // dialogue.aiWorkingLabelPlanning, not …Collecting — by this point
     // there's nothing left to browse (explore already wrapped up), the AI
@@ -734,81 +748,23 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     playCategory(0);
   }
 
-  // AI-led — flights/hotels collection is its own short intro+checklist
-  // beat (see aiLedFlightsHotelsIntro/aiLedFlightsHotelsChecklistItems),
-  // mirroring human-led/mixed-led's runFlightsHotelsCollection. From there
-  // this now shows the SAME candidate catalog they get (see
-  // explorationCollectionChecklistItems, shared rather than AI-led having
-  // its own separate checklist) — the only real difference is who does the
-  // choosing once it's on screen: human-led/mixed-led browse it
-  // themselves, AI-led runs runAiAutoplay over it instead while the
-  // catalog stays fully read-only for the participant (see
-  // components/workspace/ExplorePanel.tsx's condition === "ai" branch).
-  // Doesn't rank anything itself — that waits for confirmStyleQuestion
-  // below, once the participant has actually picked the style tag(s) to
-  // rank by, instead of the old companion-implied guess. Ends by posting
-  // the style question (see aiLedStyleQuestionIntro) rather than jumping
-  // straight into autoplay narration.
-  function runAiLedFlow() {
-    // enterStage("explore") and aiWorking:true both wait for
-    // aiLedFlightsHotelsIntro to actually land in chat (inside this
-    // `after` callback) instead of firing the instant this function is
-    // called — previously they flipped immediately, so the workspace's
-    // "AI가 사이트를 탐색 중입니다." appeared the moment the participant
-    // clicked their companion answer, before the message explaining that
-    // was even visible. Moving `enterStage` together with `aiWorking`
-    // (not just the label) matters here specifically — unlike human-led/
-    // mixed-led's runFlightsHotelsCollection, this condition has no other
-    // gate keeping ExplorePanel's real catalog off-screen (see
-    // BrowserWorkspace's `showingCatalog`), so leaving activeStage
-    // "explore" set while aiWorking was still false would flash the
-    // actual interactive catalog for a moment — flipping both at once
-    // avoids that.
-    const companion = get().companion;
-    sendAiMessage(dialogue.aiLedFlightsHotelsIntro(companion), () => {
-      enterStage("explore");
-      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
-      postChecklist(dialogue.aiLedFlightsHotelsChecklistItems, () => {
-        sendAiMessage(dialogue.aiLedExploreIntro, () => {
-          postChecklist(dialogue.explorationCollectionChecklistItems, () => {
-            // Deliberately does NOT reveal the catalog yet (unlike
-            // startExploring's own aiWorking:false + skeleton beat) —
-            // AI-led is watch-only, so letting the participant see/scroll
-            // the actual candidate grid themselves before they've even
-            // picked a style (and before the AI has actually ranked
-            // anything to browse in order) would look like "관찰만" being
-            // broken for a few seconds. `aiWorking` stays true (workspace
-            // keeps showing this panel — see BrowserWorkspace's
-            // showingCatalog) with a static checkmark instead of the
-            // spinner, since the search itself is genuinely done — only
-            // the ranking/browsing is still pending. The real reveal + skim
-            // happens once confirmStyleQuestion below actually has tags to
-            // rank by and kicks off runAiAutoplay.
-            set({
-              aiWorking: true,
-              aiWorkingLabel: dialogue.aiWorkingLabelSearchComplete,
-              aiWorkingSpinning: false,
-            });
-
-            const city = get().destinationBundle.meta.city;
-            sendAiMessage(dialogue.aiLedStyleQuestionIntro(city), undefined, {
-              styleQuestion: { options: [...dialogue.aiLedStyleTagOptions], selected: [], confirmed: false },
-            });
-          });
-        });
-      });
-    });
-  }
-
-  // AI-led only — the style-question's own confirm action (see
-  // components/chat/StyleQuestionMessage.tsx), picking up where
-  // runAiLedFlow above left off. Echoes the pick as a real user-role chat
-  // bubble first (same pattern as confirmCompanion), then ranks both
-  // catalogs by the tag(s) just chosen — the same shape
-  // computePreferenceRank always takes, just fed participant-picked tags
-  // instead of a companion-implied guess — before finally running the
-  // autoplay sweep (see lib/aiAutoplay.ts's buildAiAutoplayCategories) and,
-  // once that finishes, the shared final-plan beat.
+  // Every condition's style question, asked right after the companion
+  // question confirms (see postCompanionQuestion/confirmCompanion) — its
+  // own confirm action (see components/chat/StyleQuestionMessage.tsx).
+  // Echoes the pick as a real user-role chat bubble first (same pattern as
+  // confirmCompanion), then names the city for the first time in this stage
+  // (see dialogue.explorationCollectionIntro) and runs the shared candidate
+  // search every condition now goes through together (see
+  // explorationCollectionChecklistItems) — only once that's done do
+  // conditions actually diverge again: human-led kicks off day-1 selection,
+  // mixed-led kicks off free browsing, AI-led ranks both catalogs by the
+  // tag(s) just chosen — the same shape computePreferenceRank always took,
+  // just fed participant-picked tags instead of the old companion-implied
+  // guess — and runs the autoplay sweep (see lib/aiAutoplay.ts's
+  // buildAiAutoplayCategories), then the shared final-plan beat. Human-led/
+  // mixed-led never actually use `tags` for ranking — see
+  // dialogue.styleQuestion's own comment for why the question is still
+  // asked of them (consistency across conditions).
   function confirmStyleQuestion(tags: TravelStyleTag[]) {
     set((state) => ({
       messages: [
@@ -821,49 +777,105 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
       ],
     }));
 
-    sendAiMessage(dialogue.aiLedStyleQuestionConfirmedMessage, () => {
-      const { destinationBundle } = get();
-      const rankedActivities = computePreferenceRank(destinationBundle.activities, tags).slice(0, ACTIVITY_SLOTS);
-      const rankedRestaurants = computePreferenceRank(destinationBundle.restaurants, tags).slice(
-        0,
-        RESTAURANT_SLOTS
-      );
-      set({
-        likedActivityIds: rankedActivities,
-        likedRestaurantIds: rankedRestaurants,
-        selectedActivityTags: tags,
-        selectedRestaurantTags: tags,
-      });
-
-      // The catalog reveal that runAiLedFlow deliberately withheld — same
-      // aiWorking:false + brief skeleton beat every other condition's
-      // catalog reveal uses, just delayed until there's actually a ranked
-      // order to show and the autoplay sweep is about to start narrating
-      // it, instead of an unranked list sitting there waiting on the
-      // style pick.
-      set({ aiWorking: false, loadingStage: "explore", exploreTab: "activities" });
-      setTimeout(() => {
-        set({ loadingStage: null });
-        const categories = buildAiAutoplayCategories(rankedActivities, rankedRestaurants);
-        runAiAutoplay(categories, () => {
-          sendAiMessage(dialogue.aiLedFinalPlanIntro, () => {
-            set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true });
-            postChecklist(dialogue.aiLedFinalPlanChecklistItems, () => sendFinalPlanMessage());
+    const city = get().destinationBundle.meta.city;
+    sendAiMessage(dialogue.explorationCollectionIntro(city), () => {
+      enterStage("explore");
+      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
+      postChecklist(dialogue.explorationCollectionChecklistItems, () => {
+        if (get().condition === "ai") {
+          // Deliberately does NOT reveal the catalog yet (unlike the
+          // human-led/mixed-led branch below's aiWorking:false + skeleton
+          // beat) — AI-led is watch-only, so letting the participant
+          // see/scroll the actual candidate grid themselves before the AI
+          // has actually ranked anything to browse in order would look
+          // like "관찰만" being broken for a few seconds. `aiWorking` stays
+          // true (workspace keeps showing this panel — see
+          // BrowserWorkspace's showingCatalog) with a static checkmark
+          // instead of the spinner, since the search itself is genuinely
+          // done — only the ranking/browsing is still pending. The real
+          // reveal + skim happens once runAiAutoplay actually starts below.
+          set({
+            aiWorking: true,
+            aiWorkingLabel: dialogue.aiWorkingLabelSearchComplete,
+            aiWorkingSpinning: false,
           });
+        } else {
+          set({ aiWorking: false, loadingStage: "explore" });
+          setTimeout(() => set({ loadingStage: null }), STAGE_SKELETON_MS);
+        }
+
+        // AI-led gets its own copy that names the style pick explicitly
+        // (see dialogue.aiLedExplorationCollectionComplete's own comment) —
+        // human-led/mixed-led use the plainer shared version.
+        const collectionCompleteMessage =
+          get().condition === "ai" ? dialogue.aiLedExplorationCollectionComplete : dialogue.explorationCollectionComplete;
+        sendAiMessage(collectionCompleteMessage, () => {
+          const state = get();
+          if (state.condition === "human") {
+            set({ humanDayIndex: 1 });
+            sendAiMessage(dialogue.humanExploreIntro, undefined, {
+              daySelection: { day: 1, activityStageConfirmed: false, confirmed: false },
+            });
+          } else if (state.condition === "mixed") {
+            sendAiMessage(dialogue.mixedExplorationPrompt, undefined, {
+              mixedExploreDone: { activityStageConfirmed: false, confirmed: false },
+            });
+          } else {
+            sendAiMessage(dialogue.aiLedStyleQuestionConfirmedMessage, () => {
+              const { destinationBundle } = get();
+              const rankedActivities = computePreferenceRank(destinationBundle.activities, tags).slice(
+                0,
+                ACTIVITY_SLOTS
+              );
+              const rankedRestaurants = computePreferenceRank(destinationBundle.restaurants, tags).slice(
+                0,
+                RESTAURANT_SLOTS
+              );
+              set({
+                likedActivityIds: rankedActivities,
+                likedRestaurantIds: rankedRestaurants,
+                selectedActivityTags: tags,
+                selectedRestaurantTags: tags,
+              });
+
+              // The catalog reveal the branch above deliberately withheld —
+              // same aiWorking:false + brief skeleton beat every other
+              // condition's catalog reveal uses, just delayed until there's
+              // actually a ranked order to show and the autoplay sweep is
+              // about to start narrating it, instead of an unranked list
+              // sitting there waiting on the style pick.
+              set({ aiWorking: false, loadingStage: "explore", exploreTab: "activities" });
+              setTimeout(() => {
+                set({ loadingStage: null });
+                const categories = buildAiAutoplayCategories(rankedActivities, rankedRestaurants);
+                runAiAutoplay(categories, () => {
+                  sendAiMessage(dialogue.aiLedFinalPlanIntro, () => {
+                    set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true });
+                    postChecklist(dialogue.aiLedFinalPlanChecklistItems, () => sendFinalPlanMessage());
+                  });
+                });
+              }, STAGE_SKELETON_MS);
+            });
+          }
         });
-      }, STAGE_SKELETON_MS);
+      });
     });
   }
 
-  // Every condition asks the companion question first, right after the
-  // participant's scenario prompt is sent (see postCompanionQuestion) — what
-  // happens once it's answered is where conditions actually diverge (see
-  // confirmCompanion below). Goes through the normal AI-message delay/typing-
-  // indicator beat (see sendAiMessage) rather than appearing instantly, so
-  // there's a beat to actually read the participant's own message that was
-  // just sent before this question shows up.
+  // Every condition starts its own flights/hotels beat right after the
+  // participant's scenario prompt is sent — human-led/mixed-led through
+  // runFlightsHotelsCollection, AI-led through its own near-identical
+  // runAiLedFlightsHotels (see dialogue.aiLedFlightsHotelsIntro/
+  // aiLedFlightsHotelsChecklistItems). Once that finishes, every condition
+  // converges on the same beginActivityRestaurantStage — the companion +
+  // style questions, then the shared candidate search — where conditions
+  // actually diverge again (see confirmStyleQuestion above).
   function beginExploration() {
-    postCompanionQuestion();
+    if (get().condition === "ai") {
+      runAiLedFlightsHotels(() => beginActivityRestaurantStage());
+    } else {
+      runFlightsHotelsCollection(() => beginActivityRestaurantStage());
+    }
   }
 
   // Shared by every planning entry point below — resets every per-condition
@@ -1031,12 +1043,11 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     // Marks the question message answered (hides its buttons) AND appends
     // the answer as its own real user-role message — so it reads exactly
     // like the participant typed and sent "가족", not like a pill tucked
-    // inside the AI's own bubble. From here each condition goes its own
-    // way: AI-led straight into its single combined checklist (see
-    // runAiLedFlow); human-led/mixed-led into the narrative flights/hotels
-    // collection beat first (see runFlightsHotelsCollection) — the answer
-    // itself isn't used in either's ranking, it's asked purely so every
-    // condition opens the same way.
+    // inside the AI's own bubble. Every condition goes the same way from
+    // here now — straight into the style question (see postStyleQuestion) —
+    // the answer itself isn't used in any condition's ranking, it's asked
+    // purely so every condition opens its activity/restaurant stage the
+    // same way.
     confirmCompanion: (companion) => {
       set((state) => ({
         messages: [
@@ -1049,8 +1060,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
         ],
         companion,
       }));
-      if (get().condition === "ai") runAiLedFlow();
-      else runFlightsHotelsCollection(() => startExploring());
+      postStyleQuestion();
     },
 
     confirmStyleQuestion,

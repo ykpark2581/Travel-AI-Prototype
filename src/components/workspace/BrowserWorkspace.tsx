@@ -20,15 +20,13 @@ export function BrowserWorkspace() {
 
   const isLoadingActive = loadingStage !== null && loadingStage === activeStage;
   // Human-led/mixed-led show the real catalog the instant their site
-  // checklist finishes (see lib/store.ts's startExploring). AI-led instead
-  // keeps `aiWorking` true through its own style question too (see
-  // runAiLedFlow) — the search itself is done by then (see
-  // aiWorkingSpinning, which swaps the panel's spinner for a static
-  // checkmark for exactly this stretch), but the catalog stays hidden
-  // until confirmStyleQuestion has an actual ranked order to reveal and
-  // starts narrating it — showing the raw, unranked list while the
-  // participant is still picking a style would let them browse it
-  // themselves for a beat, which isn't allowed in a watch-only condition.
+  // checklist finishes (see lib/store.ts's confirmStyleQuestion). AI-led
+  // instead keeps `aiWorking` true a beat longer — the search itself is
+  // done by then (see aiWorkingSpinning, which swaps the panel's spinner
+  // for a static checkmark for exactly this stretch), but the catalog stays
+  // hidden until runAiAutoplay actually has a ranked order to reveal and
+  // starts narrating it — showing the raw, unranked list for even a moment
+  // wouldn't be allowed in a watch-only condition.
   const showingCatalog = activeStage === "explore" && !aiWorking;
   // Genuinely idle (before any checklist has started — e.g. still waiting
   // on the companion question) shows nothing at all in the workspace,

@@ -26,45 +26,28 @@ export function buildInitialPrompt(country: string, city: string): string {
 export const aiWorkingLabelCollecting = "AI가 사이트를 탐색 중입니다.";
 export const aiWorkingLabelPlanning = "AI가 여행 일정을 계획 중입니다.";
 // AI-led only — shown (with AiWorkingPanel's spinner swapped for a static
-// checkmark, see aiWorkingSpinning) during the style question, once the
-// candidate search has actually finished but the catalog itself is still
-// deliberately withheld (see lib/store.ts's runAiLedFlow). Matches the
+// checkmark, see aiWorkingSpinning) in the brief gap between the candidate
+// search finishing and runAiAutoplay actually starting to narrate it (see
+// lib/store.ts's confirmStyleQuestion) — the search itself is done, but the
+// catalog stays deliberately withheld a beat longer. Matches the
 // exploration checklist's own last line word-for-word on purpose — same
 // event, just echoed in the workspace instead of only in chat.
 export const aiWorkingLabelSearchComplete = "액티비티와 식당 검색 완료";
 
-// Hand-written per-option phrasing for the companion echo below — plugged
-// into "네, {phrase} 여행으로 계획해볼게요." Keyed by companionOptions'
-// exact strings; any option without an explicit entry (there isn't one
-// today, but this stays safe if that list ever changes) falls back to a
-// generic "{답변}에게 어울리는" in companionIntroPhrase rather than throwing
-// or rendering "undefined".
-const companionPhrase: Record<string, string> = {
-  가족: "가족과 함께 즐기기 좋은",
-  친구: "친구들과 함께 즐기기 좋은",
-  부모님: "부모님과 함께 즐기기 좋은",
-  연인: "연인과 함께 즐기기 좋은",
-  혼자: "혼자서도 편하게 즐길 수 있는",
-  "아직 정하지 않음": "누구와 함께하더라도 즐기기 좋은",
-};
-
-function companionIntroPhrase(companion: string): string {
-  return companionPhrase[companion] ?? `${companion}에게 어울리는`;
-}
-
 // Human-led/mixed-led's version of this beat (AI-led has its own separate,
-// near-identical one — see aiLedFlightsHotelsIntro below) opens with a
-// short, purely narrative "AI is gathering flights/hotels" beat — no user
-// interaction, nothing selectable, and no real decision made yet (that only
-// happens at the very end, once the AI knows what the participant actually
-// wants to do — see finalPlan* messages below). This exists purely so the
-// experience reads as "AI already looked into flights/hotels" before ever
-// mentioning them again.
-// Takes the just-confirmed companion answer (see confirmCompanion) and
-// echoes it back in the opening line via companionIntroPhrase above.
-export function flightsHotelsCollectingIntro(companion: string): string {
-  return `네, ${companionIntroPhrase(companion)} 여행으로 계획해볼게요.\n\n먼저 가능한 항공편과 숙소를 확인해두고, 액티비티와 식당을 정한 뒤 전체 일정과 동선을 고려해 최종 여행 계획을 구성할게요.\n\n우선 항공편과 숙소부터 찾아보겠습니다.`;
-}
+// near-identical one — see aiLedFlightsHotelsIntro below) — a short, purely
+// narrative "AI is gathering flights/hotels" beat right after the
+// participant's own scenario prompt, no user interaction, nothing
+// selectable, and no real decision made yet (that only happens at the very
+// end, once the AI knows what the participant actually wants to do — see
+// finalPlan* messages below). Plain string, not a function — used to echo
+// the just-confirmed companion answer here (see the now-removed
+// companionPhrase/companionIntroPhrase), but the companion question moved
+// to the start of the activity/restaurant stage instead (see
+// companionQuestion below, lib/store.ts's beginActivityRestaurantStage) —
+// nothing to echo yet at this point in the flow.
+export const flightsHotelsCollectingIntro =
+  "네, 알겠습니다.\n\n먼저 가능한 항공편과 숙소를 확인해두고, 액티비티와 식당을 정한 뒤 전체 일정과 동선을 고려해 최종 여행 계획을 구성할게요.\n\n우선 항공편과 숙소부터 찾아보겠습니다.";
 export const flightsHotelsCollectingItems = [
   "hotely.com 사이트 탐색 중",
   "sky.com 사이트 탐색 중",
@@ -75,24 +58,19 @@ export const flightsHotelsCollectingItems = [
 // then a separate "now let's look at activities/restaurants" lead-in) into
 // one — no participant action happens between them, so per the "같은 맥락
 // = 하나의 말풍선" rule they're one continuous thought, not two arrivals.
-// Also explains WHY flights/hotels aren't locked in yet (they're picked
-// last, once activities/restaurants shape the itinerary the flight/hotel
-// choice needs to fit around) — participants were reading a still-earlier
-// version as "flights/hotels are already decided," which wasn't true until
-// runFinalPlanGeneration actually locks them in. Immediately followed by
-// the explore-collection checklist (see lib/store.ts's startExploring) —
-// shown ONLY in chat as its own standalone card (see components/chat/
-// ChecklistCard.tsx), never visualized in the workspace itself (which just
-// shows a generic "processing" panel the whole time — see AiWorkingPanel).
-// One combined checklist pass now, not one per category — activities and
-// restaurants are a single "explore" stage split only by an in-panel tab
-// (see components/workspace/ExplorePanel.tsx), never their own separate
-// steps. No city name here (unlike an even earlier version) — the checklist
-// right after this already visually implies "searching various sites," and
-// naming the city is now mixedExplorationPrompt's job instead, once there
-// are actual results to report back with it.
-export const flightsHotelsCollectingComplete =
-  "항공편과 숙소 후보를 확인했습니다.이제 액티비티와 식당을 살펴보며 일정을 구체화해볼게요.\n\n먼저 여러 여행 사이트에서 액티비티와 식당 후보를 찾아보겠습니다.";
+// Shared by all three conditions now (see lib/store.ts's
+// beginActivityRestaurantStage) — the start of the activity/restaurant
+// stage, right after the flights/hotels checklist finishes. Also explains
+// WHY flights/hotels aren't locked in yet (they're picked last, once
+// activities/restaurants shape the itinerary the flight/hotel choice needs
+// to fit around) — participants were reading a still-earlier version as
+// "flights/hotels are already decided," which wasn't true until
+// runFinalPlanGeneration actually locks them in. Followed by the companion
+// question, then the style question (see companionQuestion/styleQuestion
+// below) — both now common to every condition — before the candidate
+// search itself begins (see explorationCollectionIntro below).
+export const activityRestaurantStageIntro =
+  "이제 액티비티와 식당을 살펴보며 일정을 구체화해볼게요.\n\n후보를 찾기 전에 이번 여행에 대해 간단히 알려주세요.";
 
 export const explorationCollectionChecklistItems = [
   "Tripy.com 사이트 탐색 중",
@@ -101,31 +79,48 @@ export const explorationCollectionChecklistItems = [
   "액티비티와 식당 검색 완료",
 ];
 
-// Mixed-led only, sent once collection finishes and the combined catalog is
-// actually shown — free browsing, no required count, but each card gets an
-// explicit 관심있음/관심없음 button pair (see mixedInterestedLabel/
+// Sent once the companion + style questions are both answered, right before
+// explorationCollectionChecklistItems runs (see lib/store.ts's
+// confirmStyleQuestion) — the AI's own acknowledgment that both answers are
+// about to be put to use. Takes the city specifically (not meta.name — see
+// types/index.ts's DestinationMeta.city comment for why those two diverge
+// for vietnam/taiwan) — naming it here rather than in
+// activityRestaurantStageIntro above, since the candidate search itself
+// hasn't started until this message.
+export function explorationCollectionIntro(city: string): string {
+  return `알려주신 여행 정보와 스타일을 고려하여 ${city}의 액티비티와 식당 후보를 찾아볼게요.`;
+}
+
+// Sent once explorationCollectionChecklistItems finishes and the combined
+// catalog is actually on screen — human-led/mixed-led's version (contrast
+// with the old per-condition "found candidates in {city}" framing this
+// replaces, which used to open mixedExplorationPrompt/humanExploreIntro
+// themselves). AI-led uses its own copy instead (see
+// aiLedExplorationCollectionComplete below) — its follow-up message names
+// the style pick explicitly, so this one deliberately doesn't. Each
+// condition's own mechanic-specific instruction follows immediately after
+// as its own bubble (see mixedExplorationPrompt/humanExploreIntro below).
+export const explorationCollectionComplete = "여행 조건에 맞는 다양한 액티비티와 식당 후보를 찾았어요.";
+
+// Mixed-led only, sent right after explorationCollectionComplete above —
+// free browsing, no required count, but each card gets an explicit
+// 관심있음/관심없음 button pair (see mixedInterestedLabel/
 // mixedNotInterestedLabel below) instead of a select action — that button
 // pair is the *only* signal the AI uses afterward (see
 // lib/browsingInference.ts), hover/detail time no longer feeds anything.
 // Human-led's post-collection prompt is day-by-day instead — see
-// humanExploreIntro/humanDaySelectionPrompt below. One bubble, not two —
-// the "here's what happens with your input" line used to be a separate
-// follow-up message with nothing (no user action, no stage change) between
-// it and this one, so it's folded in here instead (see the flights/hotels
-// merge above for the same rule applied). Takes the city specifically (not
-// meta.name — see types/index.ts's DestinationMeta.city comment for why
-// those two diverge for vietnam/taiwan) — this is now the one message that
-// reports back "found candidates in {city}," since
-// flightsHotelsCollectingComplete no longer names it. Doesn't spell out
-// either the "액티비티 완료" button in words (see the attached
-// mixedExploreDone payload, components/chat/MixedExploreDoneMessage.tsx —
-// it's already visible right under this message) or the tab-switching
-// mechanics — 식당 starts disabled until that button is pressed (see
-// components/workspace/ExplorePanel.tsx's own comment), so there's nothing
-// to "freely switch" between yet at the point this message shows.
-export function mixedExplorationPrompt(city: string): string {
-  return `${city}에서 경험할 수 있는 액티비티와 식당 후보들을 찾았어요.\n\n직접 후보들을 둘러보고, '관심있음 👍🏻', '관심없음 👎🏻'을 표시하여 여행 스타일을 알려주세요. 이를 바탕으로 추천 일정을 구성해볼게요.`;
-}
+// humanExploreIntro/humanDaySelectionPrompt below. Plain string, not a
+// function — no longer names the city or announces "found candidates"
+// itself (explorationCollectionComplete above already covered both).
+// Doesn't spell out either the "액티비티 완료" button in words (see the
+// attached mixedExploreDone payload, components/chat/
+// MixedExploreDoneMessage.tsx — it's already visible right under this
+// message) or the tab-switching mechanics — 식당 starts disabled until that
+// button is pressed (see components/workspace/ExplorePanel.tsx's own
+// comment), so there's nothing to "freely switch" between yet at the point
+// this message shows.
+export const mixedExplorationPrompt =
+  "직접 후보들을 둘러보고, '관심있음 👍🏻', '관심없음 👎🏻'을 표시하여 여행 스타일을 알려주세요. 이를 바탕으로 추천 일정을 구성해볼게요.";
 // Shared by human-led (components/chat/DaySelectionMessage.tsx) and
 // mixed-led (components/chat/MixedExploreDoneMessage.tsx) — both moved
 // from one "move on" button to two in sequence, since the plain workspace
@@ -160,24 +155,22 @@ export const mixedNotInterestedLabel = "관심없음";
 export const exploreActivitiesTabLabel = "액티비티";
 export const exploreRestaurantsTabLabel = "식당";
 
-// Human-led only — the very first day-1 prompt, sent once right when the
-// explore-collection checklist finishes (see lib/store.ts's
-// startExploring), replacing what used to be a bare humanDaySelectionPrompt(1)
-// with no framing at all. Explains the mechanics that only need saying
-// once (tabs switch freely, 2 of each per day) before handing off into the
-// actual day-1 kickoff — carries the same daySelection:{day:1} payload
+// Human-led only — the very first day-1 prompt, sent right after
+// explorationCollectionComplete above (see lib/store.ts's
+// confirmStyleQuestion), replacing what used to be a bare
+// humanDaySelectionPrompt(1) with no framing at all. Explains the mechanics
+// that only need saying once (2 of each per day) before handing off into
+// the actual day-1 kickoff — carries the same daySelection:{day:1} payload
 // humanDaySelectionPrompt(1) used to (see components/chat/
 // DaySelectionMessage.tsx), so this fully replaces that first call rather
 // than preceding it as a second bubble. Days 2-4 go back to the plain,
 // unexplained humanDaySelectionPrompt below — repeating "탭에서 자유롭게
-// 전환할 수 있습니다" every day would just be noise by then.
-// Function, not a plain string — needs the destination's city interpolated
-// in (see types/index.ts's DestinationMeta.city comment for why that's
-// `.city` specifically, not `.name`/`.country`), same as
+// 전환할 수 있습니다" every day would just be noise by then. Plain string,
+// not a function — no longer names the city itself
+// (explorationCollectionComplete above already did), same as
 // mixedExplorationPrompt above.
-export function humanExploreIntro(city: string): string {
-  return `${city}에서 경험할 수 있는 액티비티와 식당 후보들을 찾았어요.\n\n후보를 직접 둘러보고 여행 일정에 포함하고 싶은 액티비티와 식당을 2개씩 선택해 주세요.\n\n1일차 일정부터 시작할게요.`;
-}
+export const humanExploreIntro =
+  "후보를 직접 둘러보고 여행 일정에 포함하고 싶은 액티비티와 식당을 2개씩 선택해 주세요.\n\n1일차 일정부터 시작할게요.";
 
 // Human-led only, step 2 — instead of free-browsing then placing items
 // afterward, the AI walks the participant through one day at a time (see
@@ -205,76 +198,40 @@ export function humanDaySelectionSummary(activityNames: string[], restaurantName
   return lines.join("\n");
 }
 
-// Every condition asks this once, right after the scenario prompt (see
-// lib/store.ts's beginExploration) — purely narrative for all three now
-// (AI-led used to imply a style from the answer, see the now-deleted
-// lib/companionStyle.ts, but that's been replaced by an explicit question
-// instead — see aiLedStyleQuestionIntro above).
-export const companionQuestion = "누구와 함께하는 여행인가요?";
+// Every condition asks this once, right at the start of the
+// activity/restaurant stage — after flights/hotels, before the style
+// question below (see lib/store.ts's beginActivityRestaurantStage) —
+// purely narrative for all three now (AI-led used to imply a style from
+// the answer, see the now-deleted lib/companionStyle.ts, but that's been
+// replaced by an explicit style question instead — see styleQuestion
+// below).
+export const companionQuestion = "이번 여행은 누구와 함께 가시나요?";
 export const companionOptions = ["가족", "친구", "부모님", "연인", "혼자", "아직 정하지 않음"];
 export const companionConfirmLabel = "선택 완료";
 
-// AI-led has no participant action to wait on at any point, but a single
-// 9-line checklist ("hotely.com 탐색 중" ... all the way through "최적의
-// 여행 일정 구성 완료" back to back) read as an undifferentiated wall of
-// "탐색 중" — nothing in it looked more important than anything else, so
-// it stopped actually being read. Split into the same two beats human-led/
-// mixed-led already have (flights/hotels, then activities/restaurants —
-// see lib/store.ts's runAiLedFlow), each with its own short intro line and
-// its own short checklist that ends on that phase's own "완료" item,
-// instead of one undifferentiated 9-item list.
-// Same companion-echo as flightsHotelsCollectingIntro above (see its
-// comment) — AI-led's own separate copy of this beat.
-export function aiLedFlightsHotelsIntro(companion: string): string {
-  return `네, ${companionIntroPhrase(companion)} 여행으로 계획해볼게요.\n\n먼저 가능한 항공편과 숙소를 확인하고, 액티비티와 식당을 정한 뒤 전체 일정과 동선을 고려해 최종 여행 계획을 구성할게요.\n\n우선 항공편과 숙소부터 찾아보겠습니다.`;
-}
-export const aiLedFlightsHotelsChecklistItems = [
-  "hotely.com 사이트 탐색 중",
-  "sky.com 사이트 탐색 중",
-  "airplane.com 사이트 탐색 중",
-  "항공편 및 숙소 검색 완료",
-];
-
-// Leads into the SAME explorationCollectionChecklistItems checklist human-
-// led/mixed-led use (see lib/store.ts's runAiLedFlow) — the candidate-
-// finding step itself is now presented identically across all three
-// conditions; only what happens once the candidates are on screen differs
-// (see aiLedAutoplayIntro below). Previously AI-led had its own separate,
-// longer checklist here and skipped showing any catalog at all — meant an
-// entirely human-invisible browsing phase (zero manipulation-check
-// signal for mc1/mc2 — see data/questionnaire.ts) and read as unnatural
-// ("항공/숙소는 후보를 보여주면서 액티비티/식당만 안 보여주는" — a
-// destination with literally no activities/restaurants candidates ever
-// shown felt like a missing step, not a deliberate design). Plain string,
-// not a function — deliberately doesn't name the city yet, same as
-// flightsHotelsCollectingComplete above (see that comment): naming it here
-// is aiLedStyleQuestionIntro's job instead, once the catalog is actually on
-// screen below this message.
-export const aiLedExploreIntro =
-  "항공편과 숙소 후보를 확인했습니다. 이제 액티비티와 식당을 살펴보며 일정을 구체화해볼게요.\n\n먼저 여러 여행 사이트에서 액티비티와 식당 후보를 찾아보겠습니다.";
-
-// AI-led only — replaces human-led's humanExploreIntro / mixed-led's
-// mixedExplorationPrompt as the message right after the candidate catalog
-// actually appears (see lib/store.ts's runAiLedFlow). Unlike before, this
-// isn't the AI announcing it'll start browsing right away — it's a
-// question first (see styleQuestion below): the one piece of explicit
-// preference AI-led actually asks for, replacing the old companion-implied
-// style guess (see lib/companionStyle.ts, now deleted) with something the
-// participant stated directly. Up to 2, matching TravelStyleTag's own
-// vocabulary (see types/index.ts) — the labels here use "·" instead of
-// "/" purely for display readability as button text (see styleTagLabel
-// below); the underlying TravelStyleTag values themselves are unchanged.
-// Function, not a plain string — same reason as humanExploreIntro above
-// (needs `.city` interpolated in, not left as a literal "${city}").
-export function aiLedStyleQuestionIntro(city: string): string {
-  return `${city}의 액티비티와 식당 후보를 찾았어요. 일정을 구성하기 전에, 이번 여행에서 원하는 스타일을 알려주세요. (최대 2개까지 선택 가능)`;
-}
+// Every condition's second upfront question, asked right after the
+// companion question confirms (see lib/store.ts's confirmCompanion) — the
+// one piece of explicit preference every condition now asks for directly,
+// before the candidate search itself even starts. Used to be AI-led only
+// (replacing the old companion-implied style guess, see
+// lib/companionStyle.ts, now deleted, with something the participant stated
+// directly) — now asked of every condition for consistency (see
+// lib/store.ts's confirmStyleQuestion for how each condition's ranking
+// logic actually uses — or, for human-led/mixed-led, doesn't use — the
+// answer). Up to 2, matching TravelStyleTag's own vocabulary (see
+// types/index.ts) — the labels here use "·" instead of "/" purely for
+// display readability as button text (see styleTagLabel below); the
+// underlying TravelStyleTag values themselves are unchanged. Plain string,
+// not a function — no city to interpolate any more (the candidate search
+// hasn't started yet at this point — see explorationCollectionIntro above
+// for where the city is actually named next).
+export const styleQuestion = "이번 여행에서 원하는 스타일을 알려주세요. (최대 2개까지 선택 가능)";
 
 // TravelStyleTag values, in the fixed order shown as chips (see
 // components/chat/StyleQuestionMessage.tsx) — matches
 // data/destinations/*.ts's own styleTags vocabulary exactly, so
 // lib/preferenceRank.ts's tag-matching keeps working unchanged.
-export const aiLedStyleTagOptions: TravelStyleTag[] = [
+export const styleTagOptions: TravelStyleTag[] = [
   "자연/휴식",
   "문화/역사",
   "식당/미식",
@@ -282,7 +239,7 @@ export const aiLedStyleTagOptions: TravelStyleTag[] = [
   "감성/사진 명소",
 ];
 
-// Display-only relabeling for aiLedStyleTagOptions' chips — "·" reads more
+// Display-only relabeling for styleTagOptions' chips — "·" reads more
 // naturally as a button label than "/", and "맛집" is more natural spoken
 // Korean than "식당" for this one tag. Purely cosmetic: never touches the
 // actual TravelStyleTag string that gets stored/matched against.
@@ -297,23 +254,52 @@ export function styleTagLabel(tag: TravelStyleTag): string {
   return STYLE_TAG_DISPLAY_LABELS[tag] ?? tag;
 }
 
-// Sent once the style question above is confirmed (see lib/store.ts's
-// confirmStyleQuestion) — the AI's own reply acknowledging the answer
-// before runAiAutoplay actually starts sweeping the (now re-ranked using
-// those tags) catalog. Cards render read-only throughout, tabs switch on
-// their own, a scroll skim + a cursor/speech-bubble pair narrate what the
-// AI is doing (see components/workspace/ExplorePanel.tsx and
+// AI-led has no participant action to wait on at any point, but a single
+// 9-line checklist ("hotely.com 탐색 중" ... all the way through "최적의
+// 여행 일정 구성 완료" back to back) read as an undifferentiated wall of
+// "탐색 중" — nothing in it looked more important than anything else, so
+// it stopped actually being read. Split into the same two beats human-led/
+// mixed-led already have (flights/hotels, then activities/restaurants —
+// see lib/store.ts's runAiLedFlightsHotels/confirmStyleQuestion), each with
+// its own short intro line and its own short checklist that ends on that
+// phase's own "완료" item, instead of one undifferentiated 9-item list.
+// AI-led's own copy of flightsHotelsCollectingIntro above — plain string,
+// not a function, for the same reason (no companion to echo yet).
+export const aiLedFlightsHotelsIntro =
+  "네, 알겠습니다.\n\n먼저 가능한 항공편과 숙소를 확인하고, 액티비티와 식당을 정한 뒤 전체 일정과 동선을 고려해 최종 여행 계획을 구성할게요.\n\n우선 항공편과 숙소부터 찾아보겠습니다.";
+export const aiLedFlightsHotelsChecklistItems = [
+  "hotely.com 사이트 탐색 중",
+  "sky.com 사이트 탐색 중",
+  "airplane.com 사이트 탐색 중",
+  "항공편 및 숙소 검색 완료",
+];
+
+// AI-led's own copy of explorationCollectionComplete above — names the
+// style pick explicitly ("선호하신 스타일을 고려하여"), unlike the
+// human-led/mixed-led version, since AI-led's follow-up line
+// (aiLedStyleQuestionConfirmedMessage below) is what actually announces
+// it's about to compare candidates using that answer.
+export const aiLedExplorationCollectionComplete =
+  "여행 조건과 선호하신 스타일을 고려하여 다양한 액티비티와 식당 후보를 찾았어요.";
+
+// Sent right after aiLedExplorationCollectionComplete above (see
+// lib/store.ts's confirmStyleQuestion) right before runAiAutoplay actually
+// starts sweeping the (ranked using the earlier-picked style tags) catalog.
+// AI-led only. Cards render read-only throughout, tabs switch on their
+// own, a scroll skim + a cursor/speech-bubble pair narrate what the AI is
+// doing (see components/workspace/ExplorePanel.tsx and
 // components/cards/AutoplayCursorBubble.tsx).
 export const aiLedStyleQuestionConfirmedMessage =
-  "알려주신 여행 스타일을 바탕으로 후보를 비교해 적합한 액티비티와 식당을 선정할게요.";
+  "이제 수집한 후보들을 비교하여 일정에 적합한 액티비티와 식당을 선정할게요.";
 
 // AI-led only — once runAiAutoplay finishes sweeping both catalogs, this
 // short intro + checklist plays before the shared final-plan message (see
-// lib/store.ts's runAiLedFlow). Starts straight at the flights/hotels
-// comparison step — no "액티비티·식당 후보 선정" line the way human-led/
-// mixed-led get (see finalPlanChecklistItems/mixedFinalPlanChecklistItems
-// below) — since the autoplay the participant just watched already *was*
-// that selection, not something left to (re-)summarize here.
+// lib/store.ts's confirmStyleQuestion). Starts straight at the
+// flights/hotels comparison step — no "액티비티·식당 후보 선정" line the
+// way human-led/mixed-led get (see finalPlanChecklistItems/
+// mixedFinalPlanChecklistItems below) — since the autoplay the participant
+// just watched already *was* that selection, not something left to
+// (re-)summarize here.
 export const aiLedFinalPlanIntro = "액티비티와 식당 선정이 완료되었습니다.";
 export const aiLedFinalPlanChecklistItems = [
   "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",
@@ -349,7 +335,7 @@ export const finalPlanChecklistItems = [
 // aiLedFinalPlanChecklistItems (same flights/hotels comparison + wrap-up
 // beat every condition ends on).
 export const mixedPreferenceAnalysisIntro =
-  "살펴보신 후보와 관심 표시를 바탕으로 선호를 분석했어요.\n관심을 보인 장소와 비슷한 후보들을 함께 비교하고, 이동 동선과 일정 구성을 고려해 최종 장소를 선정할게요.";
+  "관심을 보인 장소와 비슷한 후보들을 함께 비교하고, 이동 동선과 일정 구성을 고려해 최종 장소를 선정할게요.";
 export const mixedFinalPlanChecklistItems = [
   "선호 패턴을 파악하여 액티비티·식당 후보 선정 중",
   "액티비티·식당과의 동선을 고려하여 항공편·숙소 최종 비교 중",

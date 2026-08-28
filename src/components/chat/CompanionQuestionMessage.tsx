@@ -7,11 +7,12 @@ import { useExperimentStore } from "@/lib/store";
 import { companionConfirmLabel } from "@/data/dialogue";
 import type { CompanionQuestionPayload } from "@/types";
 
-// Every condition's opening question — single-select, asked once right
-// after the scenario prompt (see lib/store.ts's beginExploration). Once
-// answered, the pick shows up as its own real user chat bubble (see
-// confirmCompanion) rather than a pill here, so this renders nothing once
-// confirmed — just hides its own buttons.
+// Every condition's first upfront question — single-select, asked once at
+// the start of the activity/restaurant stage, after flights/hotels (see
+// lib/store.ts's beginActivityRestaurantStage). Once answered, the pick
+// shows up as its own real user chat bubble (see confirmCompanion) rather
+// than a pill here, so this renders nothing once confirmed — just hides
+// its own buttons.
 export function CompanionQuestionMessage({ payload }: { payload: CompanionQuestionPayload }) {
   const confirmCompanion = useExperimentStore((s) => s.confirmCompanion);
   const [selected, setSelected] = useState(payload.selected);

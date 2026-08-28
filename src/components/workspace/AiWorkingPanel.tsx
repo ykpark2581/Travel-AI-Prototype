@@ -12,9 +12,10 @@ import { Check, Compass } from "lucide-react";
 // checklist in flight, see `aiWorking` in lib/store.ts), since showing
 // "탐색 중" before anything has actually started reads as a lie.
 // `spinning` (default true) swaps the rotating compass for a static
-// checkmark — AI-led's style-question wait (see lib/store.ts's
-// runAiLedFlow) reuses this panel to say the search is already done, so a
-// still-spinning icon there would contradict its own "완료" text.
+// checkmark — AI-led's brief post-search hold (see lib/store.ts's
+// confirmStyleQuestion) reuses this panel to say the search is already
+// done, so a still-spinning icon there would contradict its own "완료"
+// text.
 export function AiWorkingPanel({ text, spinning = true }: { text: string; spinning?: boolean }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 py-20 text-center">
