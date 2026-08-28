@@ -60,9 +60,8 @@ export async function POST(request: Request) {
   const answers = payload.answers ?? {};
   if (payload.kind === "condition") {
     // Index-aligned with conditionSurveyItems (mc1, mc2, mc3, dv1, dv6,
-    // dv2, dv4, dv7, dv8) — q1..q9 in that fixed order, one Google Form
-    // field each instead of a
-    // single JSON blob.
+    // dv2, dv4, dv7, dv8, dv9) — q1..q10 in that fixed order, one Google
+    // Form field each instead of a single JSON blob.
     conditionSurveyItems.forEach((item, i) => {
       set(`q${i + 1}` as keyof typeof SURVEY_FORM_ENTRY_IDS, answers[item.id]);
     });
@@ -86,7 +85,8 @@ export async function POST(request: Request) {
       if (entryKey) set(entryKey, answers[item.id]);
     });
   } else {
-    // finalSurveyItems is [fs1, fs2] → Final_satisfaction / _reason.
+    // finalSurveyItems is [fs1, fs2, fs3] → Final_satisfaction /
+    // _reason / _improvement_feedback.
     // rewardSurveyItems (phone, interview_consent — see
     // QuestionnaireScreen.tsx's second step) rides along in this same final
     // row rather than a separate one, reusing the preContact/
@@ -94,9 +94,10 @@ export async function POST(request: Request) {
     // now-removed contact/name questions (see data/questionnaire.ts's
     // preSurveyItems comment and surveyFormFields.ts's own comment on
     // preInterviewConsent for how that particular field got repurposed).
-    const [fs1, fs2] = finalSurveyItems;
+    const [fs1, fs2, fs3] = finalSurveyItems;
     set("finalSatisfaction", answers[fs1.id]);
     set("finalSatisfactionReason", answers[fs2.id]);
+    set("finalImprovementFeedback", answers[fs3.id]);
     set("preContact", answers.phone);
     set("preInterviewConsent", answers.interview_consent);
   }

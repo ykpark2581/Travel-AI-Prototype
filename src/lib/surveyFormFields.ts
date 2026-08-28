@@ -10,9 +10,10 @@ export const SURVEY_FORM_ACTION_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSfJL2hcucJ74eYjljTCWXX7kdNXC_rDlooXU64ShKMaLJgMuA/formResponse";
 
 // Sheet column layout this maps to (see docs/SURVEY_SETUP.md):
-//   ParticipantName | timestamp | type | destination | Q1..Q9 |
+//   ParticipantName | timestamp | type | destination | Q1..Q10 |
 //   PreAge..PreAiTrust | Final_satisfaction | Final_satisfaction_reason |
-//   block | conditionOrder | likedActivityCount | likedRestaurantCount
+//   Final_improvement_feedback | block | conditionOrder |
+//   likedActivityCount | likedRestaurantCount
 //
 // Despite the column name, ParticipantName never holds a real name — it's
 // always the anonymous 8-character code store.ts's ensureParticipantId
@@ -20,25 +21,25 @@ export const SURVEY_FORM_ACTION_URL =
 // what links a participant's 3 condition rows + 1 final row together
 // without identifying them.
 //
-// q1..q9 are index-aligned 1:1 with data/questionnaire.ts's
-// conditionSurveyItems (mc1, mc2, mc3, dv1, dv6, dv2, dv4, dv7, dv8, in
-// that order) — only filled on condition rows. finalSatisfaction/
-// finalSatisfactionReason are index-aligned with finalSurveyItems (fs1,
-// fs2) — only filled on the final row.
+// q1..q10 are index-aligned 1:1 with data/questionnaire.ts's
+// conditionSurveyItems (mc1, mc2, mc3, dv1, dv6, dv2, dv4, dv7, dv8, dv9,
+// in that order) — only filled on condition rows. finalSatisfaction/
+// finalSatisfactionReason/finalImprovementFeedback are index-aligned with
+// finalSurveyItems (fs1, fs2, fs3) — only filled on the final row.
 //
-// This is the researcher's finalized 9-item instrument, confirmed live via
+// This is the researcher's finalized 10-item instrument, confirmed live via
 // a fresh pre-filled-link URL. Earlier this went through an 11 → 8 item
-// pass (mc3/dv3/dv5 dropped) and is now back up to 9: mc3 was re-added
-// (asked of every condition now, not just AI-led — standard manipulation-
-// check design) via a brand-new field (entry.1978038477), and a second
-// enjoyment item (dv6) was added via another new field (entry.1023376503).
-// entry.518947699 and entry.1476911649 kept their entry IDs from the
-// earlier 8-item pass but were retitled by the researcher to ask about
-// different constructs (dv1/complexity and dv7/perceived-control
-// respectively) — same field, new question text, which Google Forms
-// allows without changing the entry ID. The old q7/q8
-// (entry.1171806374/entry.1074795925) are gone from the form entirely, not
-// reused here.
+// pass (mc3/dv3/dv5 dropped), back up to 9 (mc3 re-added — asked of every
+// condition now, not just AI-led, per standard manipulation-check design —
+// via a brand-new field entry.1978038477 — and a second enjoyment item dv6
+// added via entry.1023376503), and now 10: dv9 (overall satisfaction) added
+// via another brand-new field (entry.266222582). entry.518947699 and
+// entry.1476911649 kept their entry IDs from the earlier 8-item pass but
+// were retitled by the researcher to ask about different constructs
+// (dv1/complexity and dv7/perceived-control respectively) — same field, new
+// question text, which Google Forms allows without changing the entry ID.
+// The old q7/q8 (entry.1171806374/entry.1074795925) are gone from the form
+// entirely, not reused here.
 //
 // destination/block/conditionOrder/likedActivityCount/likedRestaurantCount
 // are NOT in the current form. Left as "REPLACE_..." placeholders;
@@ -59,8 +60,16 @@ export const SURVEY_FORM_ENTRY_IDS = {
   q7: "entry.413689287",
   q8: "entry.1476911649",
   q9: "entry.1524723363",
+  // dv9 (overall satisfaction) — new field, confirmed via a fresh
+  // pre-filled-link URL the researcher generated
+  // (?entry.266222582=1).
+  q10: "entry.266222582",
   finalSatisfaction: "entry.442364441",
   finalSatisfactionReason: "entry.1371033330",
+  // fs3 (아쉽거나 불편했던 점) — new field, confirmed via a fresh
+  // pre-filled-link URL the researcher generated
+  // (?entry.1580838968=test).
+  finalImprovementFeedback: "entry.1580838968",
   // Not in the form at all — see comment above.
   block: "REPLACE_entry_id",
   conditionOrder: "REPLACE_entry_id",
@@ -120,8 +129,10 @@ const REQUIRED_ENTRY_KEYS = [
   "q7",
   "q8",
   "q9",
+  "q10",
   "finalSatisfaction",
   "finalSatisfactionReason",
+  "finalImprovementFeedback",
 ] as const;
 
 export const SURVEY_FORM_CONFIGURED =

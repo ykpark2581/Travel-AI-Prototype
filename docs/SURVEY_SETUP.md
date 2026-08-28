@@ -5,13 +5,13 @@
 스프레드시트에 쌓이며, 스프레드시트는 결과적으로 아래와 같은 형태가 됩니다
 (참가자 1명당 5행 — 사전 설문 1행 + 조건 3행 + 최종 1행):
 
-| ParticipantName | timestamp | type | destination | Q1 | … | Q9 | PreGender | PreAge | PreExploreBreadth | PreExploreCompare | PrePlanEarly | PrePlanDetailed | PreAiFreq | PreAiTravelFreq | PreAiTrust | Final_satisfaction | Final_satisfaction_reason | PreContact | PreInterviewConsent |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| K7QX2M9P | … | presurvey |  |  |  |  | 여성 | 30대 | 5 | 6 | 4 | 3 | 월 1-3회 | 가끔 활용함 | 5 |  |  |  |  |
-| K7QX2M9P | … | mixed | 방콕 | 5 | … | 4 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| K7QX2M9P | … | human | 베트남 | 4 | … | 3 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| K7QX2M9P | … | ai | 대만 | 6 | … | 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| K7QX2M9P | … | final |  |  |  |  |  |  |  |  |  |  |  |  |  | 인간+AI 혼합 유형 | 탐색 과정이 재미있어서... | 010-1234-5678 | 예, 참여할 의향이 있습니다. |
+| ParticipantName | timestamp | type | destination | Q1 | … | Q10 | PreGender | PreAge | PreExploreBreadth | PreExploreCompare | PrePlanEarly | PrePlanDetailed | PreAiFreq | PreAiTravelFreq | PreAiTrust | Final_satisfaction | Final_satisfaction_reason | Final_improvement_feedback | PreContact | PreInterviewConsent |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| K7QX2M9P | … | presurvey |  |  |  |  | 여성 | 30대 | 5 | 6 | 4 | 3 | 월 1-3회 | 가끔 활용함 | 5 |  |  |  |  |  |
+| K7QX2M9P | … | mixed | 방콕 | 5 | … | 4 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| K7QX2M9P | … | human | 베트남 | 4 | … | 3 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| K7QX2M9P | … | ai | 대만 | 6 | … | 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| K7QX2M9P | … | final |  |  |  |  |  |  |  |  |  |  |  |  |  | 인간+AI 혼합 유형 | 탐색 과정이 재미있어서... | 가끔 추천 이유가 궁금했어요 | 010-1234-5678 | 예, 참여할 의향이 있습니다. |
 
 > **`PreContact`는 이 프로토타입 전체에서 유일하게 실제 개인식별정보(휴대전화 번호)가
 > 들어가는 필드**입니다 — 나머지 모든 데이터(`ParticipantName` 포함)는 처음부터 익명
@@ -31,23 +31,25 @@
   뒀지만, 원하시면 "ParticipantCode" 등으로 폼 필드 라벨만 바꾸셔도 동작에는 영향 없습니다.
 - `type`은 사전 설문 행에서는 `presurvey`, 조건 행에서는 내부 조건 코드(`human`/`mixed`/
   `ai`, 참가자에게는 절대 노출되지 않음), 최종 행에서는 `final`입니다.
-- `Q1`~`Q9`은 조건 행에서만 채워지며, `src/data/questionnaire.ts`의 `conditionSurveyItems`
-  9개 문항(mc1, mc2, mc3, dv1, dv6, dv2, dv4, dv7, dv8)에 **순서대로** 1:1 대응합니다.
+- `Q1`~`Q10`은 조건 행에서만 채워지며, `src/data/questionnaire.ts`의 `conditionSurveyItems`
+  10개 문항(mc1, mc2, mc3, dv1, dv6, dv2, dv4, dv7, dv8, dv9)에 **순서대로** 1:1 대응합니다.
   mc3(AI주도 조작 점검)은 세 조건 모두에게 동일하게 묻습니다 — 표준적인 조작 점검
-  설계상 실제 조건과 무관하게 세 문항 모두 매번 채워집니다. 사전 설문/최종 행에서는
-  비어 있습니다.
+  설계상 실제 조건과 무관하게 세 문항 모두 매번 채워집니다. dv9(전반적 만족도)는 가장
+  마지막 문항입니다. 사전 설문/최종 행에서는 비어 있습니다.
 - `PreGender`~`PreAiTrust`(9개)는 사전 설문 행에서만 채워지며, `src/data/questionnaire.ts`의
   `preSurveyItems` 9개 문항에 각각 전용 필드로 1:1 대응합니다 (아래 표). 선택형 문항
   (연령대/성별/AI 사용빈도/여행 시 AI 활용빈도)은 실제 선택한 텍스트 그대로, likert
   문항은 1~7 숫자 그대로 들어갑니다. 조건 행/최종 행에서는 비어 있습니다. 이 9개는
   전부 익명 데이터이고, 실명·연락처는 여기 없습니다 — 아래 참고.
-- `Final_satisfaction`/`Final_satisfaction_reason`은 최종 설문(`finalSurveyItems`의
-  fs1/fs2)에 대응하며, 다른 모든 행에서는 비어 있습니다. `Final_satisfaction`은 자유
-  서술이 아니라 **"인간주도 유형" / "인간+AI 혼합 유형" / "AI주도 유형" 중 하나를 고르는
-  객관식**입니다 (`src/data/questionnaire.ts`의 `finalSurveyItems`의 fs1 — 프로토타입
-  쪽 선택지 문구가 바뀌면 이 3개도 반드시 같이 바꿔야 합니다, 아래 참고). 참고로 이
-  최종 문항만 유일하게 조건 이름을 직접 노출합니다 — 이 시점엔 참가자가 세 조건을 모두
-  마친 뒤라 앞으로 남은 과업에 편향을 줄 위험이 없기 때문입니다.
+- `Final_satisfaction`/`Final_satisfaction_reason`/`Final_improvement_feedback`은 최종
+  설문(`finalSurveyItems`의 fs1/fs2/fs3)에 대응하며, 다른 모든 행에서는 비어 있습니다.
+  `Final_satisfaction`은 자유 서술이 아니라 **"인간주도 유형" / "인간+AI 혼합 유형" /
+  "AI주도 유형" 중 하나를 고르는 객관식**입니다 (`src/data/questionnaire.ts`의
+  `finalSurveyItems`의 fs1 — 프로토타입 쪽 선택지 문구가 바뀌면 이 3개도 반드시 같이
+  바꿔야 합니다, 아래 참고). 참고로 이 최종 문항만 유일하게 조건 이름을 직접 노출합니다
+  — 이 시점엔 참가자가 세 조건을 모두 마친 뒤라 앞으로 남은 과업에 편향을 줄 위험이
+  없기 때문입니다. `Final_improvement_feedback`(세 가지 방식을 경험하며 아쉽거나
+  불편했던 점)은 fs2와 마찬가지로 자유 서술입니다.
 - `PreContact`/`PreInterviewConsent`도 최종 행에서만 채워집니다 —
   `src/data/questionnaire.ts`의 `rewardSurveyItems`(phone/interview_consent), 최종
   설문(`QuestionnaireScreen.tsx`) 두 번째 단계("보상 및 사후 인터뷰 안내")의 응답입니다.
@@ -61,7 +63,7 @@
 | 필드 | 문항 | id (`preSurveyItems`) | 상태 |
 |---|---|---|---|
 | PreGender | 귀하의 성별을 선택해주세요. (여성/남성/응답하고 싶지 않음) | gender | 완료 |
-| PreAge | 귀하의 연령대를 선택해주세요. (20대/30대/40대/50대 이상) | age | 완료 |
+| PreAge | 귀하의 연령대를 선택해주세요. (20대/30대/40대) | age | 완료 |
 | PreExploreBreadth | 나는 여행을 계획할 때 여러 출처에서 다양한 정보를 찾아보는 편이다. (1~7) | explore_breadth | 완료 |
 | PreExploreCompare | 나는 여행을 계획할 때 여러 선택지를 충분히 비교해보는 편이다. (1~7) | explore_compare | 완료 |
 | PrePlanEarly | 나는 여행을 떠나기 오래전부터 여행 계획을 세우는 편이다. (1~7) | plan_early | 완료 |
@@ -83,13 +85,14 @@ PreAge를 "객관식"으로 설정), 문구가 한 글자라도 다르면 제출
 ## 최종 설문(`final`) 필드 매핑 — 만족도 + 보상/사후 인터뷰
 
 `QuestionnaireScreen.tsx`가 이제 한 화면 안에서 두 단계로 나뉩니다 — "다음"을 누르기
-전까지는 아무것도 제출되지 않고, 두 번째 단계의 "제출"을 눌러야 아래 4개 필드가 전부
+전까지는 아무것도 제출되지 않고, 두 번째 단계의 "제출"을 눌러야 아래 5개 필드가 전부
 **한 행**으로 함께 제출됩니다.
 
 | 필드 | 문항 | id | 상태 |
 |---|---|---|---|
-| Final_satisfaction | 가장 만족스러웠던 유형 (인간주도 유형/인간+AI 혼합 유형/AI주도 유형) | fs1 (`finalSurveyItems`) | 완료 |
-| Final_satisfaction_reason | 그 이유는 무엇인가요? | fs2 (`finalSurveyItems`) | 완료 |
+| Final_satisfaction | 세 가지 여행 계획 방식 중 가장 선호하는 방식은 무엇이었나요? (인간주도 유형/인간+AI 혼합 유형/AI주도 유형) | fs1 (`finalSurveyItems`) | 완료 |
+| Final_satisfaction_reason | 위 방식을 가장 선호한 이유는 무엇인가요? | fs2 (`finalSurveyItems`) | 완료 |
+| Final_improvement_feedback | 세 가지 여행 계획 방식을 경험하면서 아쉽거나 불편했던 점이 있었다면 자유롭게 작성해 주세요. | fs3 (`finalSurveyItems`) | 완료 |
 | PreContact | 모바일 상품권을 받으실 휴대전화 번호를 입력해 주세요. | phone (`rewardSurveyItems`) | 완료 |
 | PreInterviewConsent | 사후 인터뷰에 참여할 의향이 있으십니까? (예, 참여할 의향이 있습니다./아니요.) | interview_consent (`rewardSurveyItems`) | **폼 수정 필요** |
 
@@ -143,11 +146,11 @@ URL을 저에게 전달해주세요 — `entry.XXXXXXX` ID를 매칭해서 `src/
    번 해보고, 이후에는 `?preview=human` 등으로 조건 하나를 끝까지 진행합니다.
 2. 조건 종료 설문을 제출합니다.
 3. 최종 설문을 확인하려면 `?preview=survey`로 곧장 진입할 수 있습니다 — "마지막 설문"
-   (fs1/fs2)에서 "다음"을 눌러도 아직 아무것도 제출되지 않으니, 이 시점에 새 응답이
+   (fs1/fs2/fs3)에서 "다음"을 눌러도 아직 아무것도 제출되지 않으니, 이 시점에 새 응답이
    생기지 않는 게 정상입니다. 이어지는 "보상 및 사후 인터뷰 안내"(phone/
-   interview_consent)까지 답하고 "제출"을 눌러야 최종 행 하나가 4개 필드
-   (Final_satisfaction/Final_satisfaction_reason/PreContact/PreInterviewConsent)를
-   모두 채운 채로 제출됩니다.
+   interview_consent)까지 답하고 "제출"을 눌러야 최종 행 하나가 5개 필드
+   (Final_satisfaction/Final_satisfaction_reason/Final_improvement_feedback/
+   PreContact/PreInterviewConsent)를 모두 채운 채로 제출됩니다.
 4. Google Form의 "응답" 탭에 새 응답이 생겼는지, 열이 위 표대로 채워졌는지 확인합니다.
 
 ## 참고: 데이터가 유실되지 않도록

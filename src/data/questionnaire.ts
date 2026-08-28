@@ -108,19 +108,20 @@ export const preSurveyGroups = [
 ];
 
 // Asked identically right after EACH of the three conditions — condition/
-// destination names never appear in the copy itself. 9 items, index-aligned
-// 1:1 with the form's Q1..Q9 fields (api/survey/route.ts posts
+// destination names never appear in the copy itself. 10 items, index-aligned
+// 1:1 with the form's Q1..Q10 fields (api/survey/route.ts posts
 // conditionSurveyItems[i] to q${i+1} by plain array position, with no
 // per-id lookup — a mismatched count here would silently shift every later
 // answer into the wrong sheet column). This is the researcher's finalized
 // wording/order, confirmed against a live pre-filled-link URL — earlier
 // versions had 8 items (mc3 dropped, dv3/dv5 dropped) or an 11-item draft;
 // mc3 is back (now asked of every condition, not just AI-led, per standard
-// manipulation-check design — see surveyFormFields.ts's q3 comment) and a
+// manipulation-check design — see surveyFormFields.ts's q3 comment), a
 // second enjoyment item (dv6) replaces the old dv1 slot's entry ID
 // (518947699 — same entry ID, retitled by the researcher to ask about
-// complexity instead; ids below are this file's own, unrelated to the
-// form's internal question ids).
+// complexity instead), and dv9 (overall satisfaction) was added last via a
+// brand-new field (entry.266222582, see surveyFormFields.ts's q10) — ids
+// below are this file's own, unrelated to the form's internal question ids.
 export const conditionSurveyItems: QuestionnaireItem[] = [
   // Manipulation Check — one item per condition, asked of everyone
   { id: "mc1", type: "likert", question: "이번 여행 계획에서 여러 액티비티와 식당 후보를 내가 직접 살펴보았다." },
@@ -131,7 +132,7 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   },
   { id: "mc3", type: "likert", question: "이번 여행 계획에서 일정에 포함할 액티비티와 식당을 AI가 선정했다." },
 
-  // Dependent Variables (Complexity, Enjoyment, Serendipity, Preference Refinement, Perceived Control, Trust)
+  // Dependent Variables (Complexity, Enjoyment, Serendipity, Preference Refinement, Perceived Control, Trust, Overall Satisfaction)
   { id: "dv1", type: "likert", question: "이번 여행 계획 과정에서 여러 정보를 이해하고 판단하는 것이 복잡하게 느껴졌다." },
   { id: "dv6", type: "likert", question: "이번 여행 계획 과정에서 다양한 여행 대안들을 둘러보는 탐색 과정이 즐거웠다" },
   {
@@ -142,6 +143,7 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   { id: "dv4", type: "likert", question: "다양한 선택지를 살펴보면서 내가 원하는 것을 더욱 분명히 할 수 있었다." },
   { id: "dv7", type: "likert", question: "이번 여행 계획 과정에서 내가 원하는 방향으로 계획에 영향을 줄 수 있다고 느꼈다." },
   { id: "dv8", type: "likert", question: "이번 여행 계획에서 AI가 구성한 최종 일정을 신뢰할 수 있다고 느꼈다." },
+  { id: "dv9", type: "likert", question: "이번 여행 계획 방식에 전반적으로 만족했다." },
 ];
 
 // Asked once, at the very end, after all three conditions — unlike every
@@ -152,15 +154,22 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
 // fs1's options must match the Google Form's Final_satisfaction multiple-
 // choice question exactly, string-for-string (see docs/SURVEY_SETUP.md) —
 // Forms rejects a submission whose value isn't one of the predefined
-// options.
+// options. fs3 (new) posts to its own dedicated field (see
+// surveyFormFields.ts's finalImprovementFeedback), not the Final_satisfaction*
+// pair fs1/fs2 use.
 export const finalSurveyItems: QuestionnaireItem[] = [
   {
     id: "fs1",
     type: "choice",
-    question: "다음 세 가지 인터랙션 유형 중 가장 만족스러웠던 유형은 무엇이었나요?",
+    question: "세 가지 여행 계획 방식 중 가장 선호하는 방식은 무엇이었나요?",
     options: ["인간주도 유형", "인간+AI 혼합 유형", "AI주도 유형"],
   },
-  { id: "fs2", type: "text", question: "그 이유는 무엇인가요?" },
+  { id: "fs2", type: "text", question: "위 방식을 가장 선호한 이유는 무엇인가요?" },
+  {
+    id: "fs3",
+    type: "text",
+    question: "세 가지 여행 계획 방식을 경험하면서 아쉽거나 불편했던 점이 있었다면 자유롭게 작성해 주세요.",
+  },
 ];
 
 // One-line reminder of what each fs1 option actually was, shown behind a
