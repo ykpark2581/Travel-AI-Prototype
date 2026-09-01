@@ -1,3 +1,10 @@
+// PILOT BRANCH: still the MAIN STUDY's consent text, unedited — the
+// researcher intends to send pilot-specific wording separately once it's
+// finalized. Swap `consentContent` (and check `introductionContent` below
+// too, if it needs the same treatment) once that text arrives; nothing
+// else on this branch depends on the wording itself, so this is a
+// self-contained edit whenever it's ready.
+//
 // Transcribed from the researcher's IRB-approved "온라인 설명문" (연세대학교
 // 생명윤리위원회), section 2's item counts corrected to match the actual
 // instrument — the source PDF said 사전 설문 "총 10문항" and 조건별 설문

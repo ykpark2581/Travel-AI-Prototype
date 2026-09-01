@@ -42,10 +42,10 @@ export interface FinalSurveyPayload {
   conditionOrder: string; // e.g. "mixed-human-ai" — order-effect analysis, appended column
   // Keyed by data/questionnaire.ts's finalSurveyItems ids (fs1/fs2/fs3,
   // mapped to Final_satisfaction/Final_satisfaction_reason/
-  // Final_improvement_feedback) PLUS rewardSurveyItems ids
-  // (phone/interview_consent, mapped to the preContact/
-  // preInterviewConsent fields — see api/survey/route.ts) — both steps of
-  // QuestionnaireScreen.tsx submit together as this one combined row.
+  // Final_improvement_feedback) PLUS pilotSurveyItems ids (PILOT BRANCH
+  // ONLY — mapped to their own pilot* fields) PLUS rewardSurveyItems' phone
+  // (mapped to the preContact field — see api/survey/route.ts) — all steps
+  // of QuestionnaireScreen.tsx submit together as this one combined row.
   answers: Record<string, string>;
 }
 

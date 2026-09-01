@@ -290,8 +290,10 @@ export interface ChatMessage {
 // `description`, shared by every variant below, renders as a muted line
 // directly under the question text and above its answer control (see
 // SurveyForm.tsx's QuestionBlock) — for context a participant needs BEFORE
-// answering (e.g. rewardSurveyItems' interview_consent explaining what the
-// interview actually involves before asking yes/no). Distinct from
+// answering a specific question (no current item uses this, but it stays
+// available for any question that needs its own explanatory line — the
+// main study's now-removed interview_consent item, for example, used it to
+// explain what the interview involved before asking yes/no). Distinct from
 // SurveyForm's own `notes` prop, which places a line between two different
 // items rather than inside one item's own block — use `description` for
 // anything specific to that one question, `notes` for anything that isn't.
@@ -307,6 +309,11 @@ export interface QuestionnaireTextItem {
   type: "text";
   question: string;
   description?: string;
+  // Pilot-only so far (see data/questionnaire.ts's pilotSurveyItems) — when
+  // true, allRequiredAnswered doesn't require this item, so a blank answer
+  // submits fine ("선택적 자유서술": a free-text field where leaving it
+  // blank is itself a valid response, not an incomplete one).
+  optional?: boolean;
 }
 
 // A single-line free-text answer (name, phone number) — distinct from
@@ -334,6 +341,18 @@ export interface QuestionnaireChoiceItem {
   question: string;
   options: string[];
   description?: string;
+  // Pilot-only so far (see data/questionnaire.ts's pilotSurveyItems) —
+  // reveals a short free-text follow-up directly under this question, once
+  // `option` is the answer actually picked (e.g. "있었다를 선택한 경우,
+  // ..."). Gets its own id/answer (its own Google Form field) but isn't
+  // separately numbered — it reads as part of this same question, not its
+  // own item (see SurveyForm.tsx's QuestionBlock).
+  followUp?: {
+    option: string;
+    id: string;
+    question: string;
+    optional?: boolean;
+  };
 }
 
 export type QuestionnaireItem =

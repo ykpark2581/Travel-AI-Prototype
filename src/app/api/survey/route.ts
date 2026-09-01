@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { SURVEY_FORM_ACTION_URL, SURVEY_FORM_CONFIGURED, SURVEY_FORM_ENTRY_IDS } from "@/lib/surveyFormFields";
-import { conditionSurveyItems, finalSurveyItems, preSurveyItems } from "@/data/questionnaire";
+import { conditionSurveyItems, finalSurveyItems, pilotSurveyItems, preSurveyItems } from "@/data/questionnaire";
 
 // Thin server-side proxy to the Google Form collecting survey responses
 // (see docs/SURVEY_SETUP.md). Posting from the server rather than the
@@ -86,20 +86,39 @@ export async function POST(request: Request) {
     });
   } else {
     // finalSurveyItems is [fs1, fs2, fs3] → Final_satisfaction /
-    // _reason / _improvement_feedback.
-    // rewardSurveyItems (phone, interview_consent — see
-    // QuestionnaireScreen.tsx's second step) rides along in this same final
-    // row rather than a separate one, reusing the preContact/
-    // preInterviewConsent fields originally reserved for pre-survey's own
-    // now-removed contact/name questions (see data/questionnaire.ts's
-    // preSurveyItems comment and surveyFormFields.ts's own comment on
-    // preInterviewConsent for how that particular field got repurposed).
+    // _reason / _improvement_feedback — evaluates the three planning
+    // conditions themselves. pilotSurveyItems (PILOT BRANCH ONLY) rides
+    // along in this same final row instead of its own — evaluates the
+    // PROTOTYPE/PROCEDURE, mapped 1:1 to its own dedicated fields (see
+    // surveyFormFields.ts's pilotConfusingItems/etc). rewardSurveyItems'
+    // phone (see QuestionnaireScreen.tsx's reward step) also rides along
+    // here, reusing the preContact field originally reserved for
+    // pre-survey's own now-removed contact question (see
+    // data/questionnaire.ts's preSurveyItems comment) — PILOT BRANCH: no
+    // interview-consent field at all, unlike the main study.
     const [fs1, fs2, fs3] = finalSurveyItems;
     set("finalSatisfaction", answers[fs1.id]);
     set("finalSatisfactionReason", answers[fs2.id]);
     set("finalImprovementFeedback", answers[fs3.id]);
+
+    const PILOT_SURVEY_ENTRY_KEYS: Record<string, keyof typeof SURVEY_FORM_ENTRY_IDS> = {
+      pilot_confusing_items: "pilotConfusingItems",
+      pilot_confusing_items_detail: "pilotConfusingItemsDetail",
+      pilot_confusing_steps: "pilotConfusingSteps",
+      pilot_confusing_steps_detail: "pilotConfusingStepsDetail",
+      pilot_improvement_suggestion: "pilotImprovementSuggestion",
+      pilot_duration: "pilotDuration",
+    };
+    pilotSurveyItems.forEach((item) => {
+      const entryKey = PILOT_SURVEY_ENTRY_KEYS[item.id];
+      if (entryKey) set(entryKey, answers[item.id]);
+      if (item.type === "choice" && item.followUp) {
+        const followUpEntryKey = PILOT_SURVEY_ENTRY_KEYS[item.followUp.id];
+        if (followUpEntryKey) set(followUpEntryKey, answers[item.followUp.id]);
+      }
+    });
+
     set("preContact", answers.phone);
-    set("preInterviewConsent", answers.interview_consent);
   }
 
   try {

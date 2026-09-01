@@ -6,6 +6,9 @@ import { FullScreenCard } from "@/components/flow/FullScreenCard";
 import { SurveyForm, allRequiredAnswered } from "@/components/flow/SurveyForm";
 import {
   finalSurveyItems,
+  pilotSurveyDescription,
+  pilotSurveyItems,
+  pilotSurveyTitle,
   rewardSurveyDescription,
   rewardSurveyItems,
   rewardSurveyNotes,
@@ -15,27 +18,31 @@ import { useExperimentStore } from "@/lib/store";
 import { submitSurveyRow, type FinalSurveyPayload } from "@/lib/surveySubmission";
 
 // Shown once, after all three conditions and their per-condition surveys
-// are done — two steps in this one screen, not two phases (see
-// lib/store.ts's Phase type, still just "questionnaire"): step 1 is a final
-// comparative reflection across the three experiences (finalSurveyItems);
-// "다음" only advances local state, nothing is submitted yet. Step 2 is the
-// reward/post-interview step (rewardSurveyItems — phone number for the
-// participation gift, optional post-interview consent), and "제출" submits
-// BOTH steps' answers together as one combined final row (see
-// api/survey/route.ts) — this is the last submission of the study, so
-// there's no later submission to piggyback a retry on if it fails (see
-// surveySubmission.ts) — the thank-you screen shows regardless, since
-// there's nothing more the participant can usefully do either way.
+// are done — PILOT BRANCH: three steps in this one screen (main study has
+// only two — see git history), still just one phase (see lib/store.ts's
+// Phase type, still just "questionnaire"). Step 1 is a final comparative
+// reflection across the three planning conditions (finalSurveyItems); step
+// 2 is pilot-only usability feedback on the PROTOTYPE/PROCEDURE itself
+// (pilotSurveyItems); "다음"/"다음" only advance local state, nothing is
+// submitted yet. Step 3 is the reward step (rewardSurveyItems — phone
+// number for the participation gift; no interview-consent question on this
+// branch, unlike main), and "제출" submits all three steps' answers
+// together as one combined final row (see api/survey/route.ts) — this is
+// the last submission of the study, so there's no later submission to
+// piggyback a retry on if it fails (see surveySubmission.ts) — the
+// thank-you screen shows regardless, since there's nothing more the
+// participant can usefully do either way.
 export function QuestionnaireScreen() {
   const participantId = useExperimentStore((s) => s.participantId);
   const conditionOrder = useExperimentStore((s) => s.conditionOrder);
 
-  const [step, setStep] = useState<"satisfaction" | "reward">("satisfaction");
+  const [step, setStep] = useState<"satisfaction" | "pilotFeedback" | "reward">("satisfaction");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const satisfactionReady = allRequiredAnswered(finalSurveyItems, answers);
+  const pilotFeedbackReady = allRequiredAnswered(pilotSurveyItems, answers);
   const rewardReady = allRequiredAnswered(rewardSurveyItems, answers);
 
   const handleSubmit = async () => {
@@ -85,6 +92,27 @@ export function QuestionnaireScreen() {
     );
   }
 
+  if (step === "pilotFeedback") {
+    return (
+      <FullScreenCard className="max-w-2xl">
+        <h1 className="text-xl font-semibold">{pilotSurveyTitle}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{pilotSurveyDescription}</p>
+
+        <div className="mt-8">
+          <SurveyForm
+            items={pilotSurveyItems}
+            answers={answers}
+            onAnswerChange={(id, value) => setAnswers((prev) => ({ ...prev, [id]: value }))}
+          />
+        </div>
+
+        <Button className="mt-8 w-full" size="lg" disabled={!pilotFeedbackReady} onClick={() => setStep("reward")}>
+          다음
+        </Button>
+      </FullScreenCard>
+    );
+  }
+
   return (
     <FullScreenCard className="max-w-2xl">
       <h1 className="text-xl font-semibold">마지막 설문</h1>
@@ -102,7 +130,7 @@ export function QuestionnaireScreen() {
         className="mt-8 w-full"
         size="lg"
         disabled={!satisfactionReady}
-        onClick={() => setStep("reward")}
+        onClick={() => setStep("pilotFeedback")}
       >
         다음
       </Button>

@@ -17,20 +17,15 @@ export const preSurveyTitle = "사전 설문";
 export const preSurveyDescription =
   "실험을 시작하기 전에 평소 여행 계획 방식과 AI 사용 경험에 대해 몇 가지 질문을 드립니다.";
 
-// The exact option string for rewardSurveyItems' interview_consent below
-// (exported rather than left as a literal only that item knows) so
-// QuestionnaireScreen.tsx's "did they opt in?" check can never drift out of
-// sync with the actual button label here.
-export const interviewConsentYesLabel = "예, 참여할 의향이 있습니다.";
-
 // Bare demographic/behavioral items only now — no identifying data at all
 // (see store.ts's makeParticipantCode for how participants stay anonymous
-// throughout). Phone number and post-interview consent used to live here,
-// gated behind an opt-in choice (an earlier version of this file), but both
-// moved to the very end of the study instead (see rewardSurveyItems below,
-// shown from QuestionnaireScreen.tsx after the final satisfaction
-// questions) — phone collection is now tied to the participation reward
-// itself, not framed as an interview opt-in.
+// throughout). Phone number used to live here, gated behind an opt-in
+// choice (an earlier version of this file), but moved to the very end of
+// the study instead (see rewardSurveyItems below, shown from
+// QuestionnaireScreen.tsx after the final satisfaction/pilot feedback
+// questions) — phone collection is tied to the participation reward
+// itself. PILOT BRANCH: unlike the main study, there's no post-interview
+// consent question at all here — see rewardSurveyItems' own comment.
 export const preSurveyItems: QuestionnaireItem[] = [
   {
     id: "gender",
@@ -189,16 +184,68 @@ export const conditionTypeDescriptions: Record<string, string> = {
 export const likertScaleLabels: [string, string] = ["전혀 그렇지 않다", "매우 그렇다"];
 export const likertScaleSize = 7;
 
-// Shown once, right after finalSurveyItems (same QuestionnaireScreen.tsx,
-// a second step — "다음" moves from satisfaction to this, "제출" submits
-// both together in one combined final row; see api/survey/route.ts, which
-// posts phone/interview_consent through the preContact/preInterviewConsent
-// fields originally reserved for pre-survey's own now-removed name/contact/
-// interview_consent questions). Phone number is collected from EVERYONE
-// (it's the reward, not an interview opt-in) — interview_consent is the
-// only genuinely optional piece here.
-export const rewardSurveyTitle = "보상 및 사후 인터뷰 안내";
-export const rewardSurveyDescription = "본 실험을 완료한 참가자에게 2,000원 상당의 모바일 상품권을 지급합니다.";
+// PILOT BRANCH ONLY — doesn't exist on main. Shown once, right after
+// finalSurveyItems (same QuestionnaireScreen.tsx, its own step in between
+// "satisfaction" and "reward" — see that screen's own comment) — usability
+// feedback on the PROTOTYPE/PROCEDURE itself (confusing wording, unclear
+// steps, bugs, timing), distinct from finalSurveyItems' fs1-3, which
+// evaluate the three planning conditions rather than the pilot run itself.
+// Every id here needs its own Google Form field once the pilot form exists
+// (see surveyFormFields.ts's PILOT_SURVEY_FORM_ENTRY_IDS) — none of these
+// reuse a main-study field.
+export const pilotSurveyTitle = "파일럿 참여 소감";
+export const pilotSurveyDescription = "프로토타입과 연구 절차를 개선하는 데 참고할 몇 가지 질문입니다.";
+
+export const pilotSurveyItems: QuestionnaireItem[] = [
+  {
+    id: "pilot_confusing_items",
+    type: "choice",
+    question: "설문 문항을 이해하거나 응답하는 데 어려운 부분이 있었습니까?",
+    options: ["없었다", "있었다"],
+    followUp: {
+      option: "있었다",
+      id: "pilot_confusing_items_detail",
+      question: "'있었다'를 선택한 경우, 어떤 문항이 어려웠는지 적어주십시오.",
+      optional: true,
+    },
+  },
+  {
+    id: "pilot_confusing_steps",
+    type: "choice",
+    question: "연구를 진행하면서 다음에 무엇을 해야 하는지 이해하기 어렵거나 헷갈린 순간이 있었습니까?",
+    options: ["없었다", "있었다"],
+    followUp: {
+      option: "있었다",
+      id: "pilot_confusing_steps_detail",
+      question: "'있었다'를 선택한 경우, 어느 단계에서 어떤 점이 어려웠는지 적어주십시오.",
+      optional: true,
+    },
+  },
+  {
+    id: "pilot_improvement_suggestion",
+    type: "text",
+    question: "프로토타입 또는 연구 절차에서 수정하거나 개선할 필요가 있다고 느낀 부분이 있다면 자유롭게 적어주십시오.",
+    optional: true,
+  },
+  {
+    id: "pilot_duration",
+    type: "choice",
+    question: "이번 파일럿 연구의 전체 과정을 완료하는 데 대략 얼마나 걸렸습니까?",
+    options: ["20분 미만", "20분 이상~30분 미만", "30분 이상~40분 미만", "40분 이상~50분 미만", "50분 이상"],
+  },
+];
+
+// Shown once, right after finalSurveyItems/pilotSurveyItems (same
+// QuestionnaireScreen.tsx, its own step — "다음"/"다음" moves from
+// satisfaction to pilot feedback to this, "제출" submits everything
+// together in one combined final row; see api/survey/route.ts, which posts
+// phone through the preContact field originally reserved for pre-survey's
+// own now-removed contact question). PILOT BRANCH: unlike the main study,
+// there's no post-interview consent question here at all — pilot
+// participants aren't asked about a follow-up interview, so this is just
+// the reward step, phone number only.
+export const rewardSurveyTitle = "보상 안내";
+export const rewardSurveyDescription = "본 파일럿을 완료한 참가자에게 2,000원 상당의 모바일 상품권을 지급합니다.";
 
 export const rewardSurveyItems: QuestionnaireItem[] = [
   {
@@ -206,19 +253,6 @@ export const rewardSurveyItems: QuestionnaireItem[] = [
     type: "shortText",
     question: "모바일 상품권을 받으실 휴대전화 번호를 입력해 주세요. (필수)",
     placeholder: "예: 010-1234-5678",
-  },
-  {
-    id: "interview_consent",
-    type: "choice",
-    question: "사후 인터뷰에 참여할 의향이 있으십니까?",
-    // Renders under the question text, above the yes/no choices (see
-    // types/index.ts's QuestionnaireChoiceItem/SurveyForm.tsx's
-    // QuestionBlock) — this needs to be read BEFORE deciding, unlike
-    // rewardSurveyNotes' phone-usage note below, which reads as reassurance
-    // AFTER already typing the number.
-    description:
-      "사후 인터뷰는 약 20~30분간 온라인으로 진행됩니다. 참여 의향을 밝힌 참가자 중 일부를 인터뷰 대상자로 선정하여 별도로 연락드리며, 인터뷰 완료 시 5,000원 상당의 커피 상품권을 추가로 지급합니다.",
-    options: [interviewConsentYesLabel, "아니요."],
   },
 ];
 
@@ -229,6 +263,6 @@ export const rewardSurveyItems: QuestionnaireItem[] = [
 export const rewardSurveyNotes = [
   {
     afterId: "phone",
-    text: "입력한 번호는 모바일 상품권 지급 목적으로만 사용하며, 지급 완료 후 즉시 폐기합니다. 단, 아래 문항에서 사후 인터뷰 참여 의향을 밝힌 경우에는 인터뷰 대상자 선정 및 일정 안내를 위해서도 사용합니다.",
+    text: "입력한 번호는 모바일 상품권 지급 목적으로만 사용하며, 지급 완료 후 즉시 폐기합니다.",
   },
 ];

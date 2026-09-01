@@ -77,11 +77,10 @@ function QuestionBlock({
       <p className="text-sm font-medium">
         {number}. {item.question}
       </p>
-      {/* item.description (e.g. rewardSurveyItems' interview_consent
-          explaining what the interview involves) — not to be confused with
-          conditionTypeDescriptions/expandedDescriptions below, which is a
-          per-OPTION disclosure toggle specific to fs1, not a per-question
-          field. */}
+      {/* item.description — see types/index.ts's own comment for what this
+          is for. Not to be confused with conditionTypeDescriptions/
+          expandedDescriptions below, which is a per-OPTION disclosure
+          toggle specific to fs1, not a per-question field. */}
       {item.description && <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>}
       {item.type === "likert" ? (
         <div className="mt-3">
@@ -144,6 +143,22 @@ function QuestionBlock({
                   )}
                 </ul>
               )}
+            </div>
+          )}
+          {/* Pilot-only so far — see item.followUp's own comment
+              (types/index.ts). Reads as part of THIS question, not a
+              separately numbered one, so it renders right inside the same
+              block rather than as its own QuestionBlock. */}
+          {item.followUp && answers[item.id] === item.followUp.option && (
+            <div className="mt-3">
+              <p className="text-xs text-muted-foreground">{item.followUp.question}</p>
+              <Textarea
+                value={answers[item.followUp.id] ?? ""}
+                onChange={(e) => onAnswerChange(item.followUp!.id, e.target.value)}
+                rows={2}
+                className="mt-1.5 resize-none"
+                placeholder="선택적 자유서술"
+              />
             </div>
           )}
         </>
@@ -242,7 +257,22 @@ export function SurveyForm({
 
 // Every item (likert, text, or choice) must be answered before submitting
 // — several of the final survey's items aren't Likert, so treating those
-// as optional would let them submit blank.
+// as optional would let them submit blank. Two exceptions, both pilot-only
+// so far: a text item marked `optional` (see QuestionnaireTextItem) never
+// blocks submission regardless of its value; a choice item's `followUp`
+// (see QuestionnaireChoiceItem) only blocks submission when it's actually
+// showing (its trigger option was picked) AND it isn't itself marked
+// optional.
 export function allRequiredAnswered(items: QuestionnaireItem[], answers: Record<string, string>): boolean {
-  return items.every((item) => answers[item.id]?.trim());
+  return items.every((item) => {
+    const isOptionalText = item.type === "text" && item.optional;
+    if (!isOptionalText && !answers[item.id]?.trim()) return false;
+
+    if (item.type === "choice" && item.followUp) {
+      const followUpShowing = answers[item.id] === item.followUp.option;
+      if (followUpShowing && !item.followUp.optional && !answers[item.followUp.id]?.trim()) return false;
+    }
+
+    return true;
+  });
 }
