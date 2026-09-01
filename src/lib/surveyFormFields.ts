@@ -18,10 +18,9 @@ export const SURVEY_FORM_ACTION_URL = "REPLACE_pilot_form_action_url";
 // Sheet column layout this maps to, once the pilot form exists:
 //   ParticipantName | timestamp | type | Q1..Q10 | PreAge..PreAiTrust |
 //   Final_satisfaction | Final_satisfaction_reason |
-//   Final_improvement_feedback | PilotConfusingItems |
+//   Final_improvement_feedback | PilotDuration | PilotConfusingItems |
 //   PilotConfusingItemsDetail | PilotConfusingSteps |
-//   PilotConfusingStepsDetail | PilotImprovementSuggestion |
-//   PilotDuration | PreContact
+//   PilotConfusingStepsDetail | PilotImprovementSuggestion | PreContact
 //
 // Despite the column name, ParticipantName never holds a real name — it's
 // always the anonymous 8-character code store.ts's ensureParticipantId
@@ -160,20 +159,29 @@ export const SURVEY_FORM_CONFIGURED =
 //                                                 options — exact strings)
 //   Final_satisfaction_reason,
 //   Final_improvement_feedback                  (short answer / paragraph)
-//   PilotConfusingItems                         (객관식 — 없었다 / 있었다)
-//   PilotConfusingItemsDetail                   (paragraph, optional)
-//   PilotConfusingSteps                         (객관식 — 없었다 / 있었다)
-//   PilotConfusingStepsDetail                   (paragraph, optional)
-//   PilotImprovementSuggestion                  (paragraph, optional)
 //   PilotDuration                               (객관식 — 20분 미만 /
-//                                                 20분 이상~30분 미만 /
-//                                                 30분 이상~40분 미만 /
-//                                                 40분 이상~50분 미만 /
-//                                                 50분 이상, see
+//                                                 20분 이상 30분 미만 /
+//                                                 30분 이상 40분 미만 /
+//                                                 40분 이상 50분 미만 /
+//                                                 50분 이상 / 기억이 나지
+//                                                 않음, see
 //                                                 data/questionnaire.ts's
 //                                                 pilotSurveyItems.pilot_duration
-//                                                 options — exact strings)
+//                                                 options — exact strings,
+//                                                 no "~")
+//   PilotConfusingItems                         (객관식 — 있었다. / 없었다.
+//                                                 — periods included)
+//   PilotConfusingItemsDetail                   (paragraph, optional)
+//   PilotConfusingSteps                         (객관식 — 있었다. / 없었다.
+//                                                 — periods included)
+//   PilotConfusingStepsDetail                   (paragraph, optional)
+//   PilotImprovementSuggestion                  (paragraph, optional)
 //   PreContact                                  (short answer, 필수)
+//
+// Order above matches pilotSurveyItems' actual on-screen order (duration
+// first, then confusing-items/-steps, improvement-suggestion last) — the
+// sheet COLUMN order doesn't have to match this, but the form's own
+// question order might as well, since that's what the participant sees.
 //
 // Once built, use the form's own "⋮ → 사전 채우기 링크 받기" feature,
 // fill EVERY question with its own distinguishable dummy value, hit "링크

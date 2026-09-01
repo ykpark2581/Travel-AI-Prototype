@@ -11,13 +11,13 @@
 스프레드시트에 쌓이며, 스프레드시트는 결과적으로 아래와 같은 형태가 됩니다
 (참가자 1명당 5행 — 사전 설문 1행 + 조건 3행 + 최종 1행):
 
-| ParticipantName | timestamp | type | Q1 | … | Q10 | PreGender | … | PreAiTrust | Final_satisfaction | Final_satisfaction_reason | Final_improvement_feedback | PilotConfusingItems | PilotConfusingItemsDetail | PilotConfusingSteps | PilotConfusingStepsDetail | PilotImprovementSuggestion | PilotDuration | PreContact |
+| ParticipantName | timestamp | type | Q1 | … | Q10 | PreGender | … | PreAiTrust | Final_satisfaction | Final_satisfaction_reason | Final_improvement_feedback | PilotDuration | PilotConfusingItems | PilotConfusingItemsDetail | PilotConfusingSteps | PilotConfusingStepsDetail | PilotImprovementSuggestion | PreContact |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | K7QX2M9P | … | presurvey |  |  |  | 여성 | … | 5 |  |  |  |  |  |  |  |  |  |  |
 | K7QX2M9P | … | mixed | 5 | … | 4 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | K7QX2M9P | … | human | 4 | … | 3 |  |  |  |  |  |  |  |  |  |  |  |  |  |
 | K7QX2M9P | … | ai | 6 | … | 5 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| K7QX2M9P | … | final |  |  |  |  |  |  | 인간+AI 혼합 유형 | 탐색 과정이 재미있어서... | 가끔 추천 이유가 궁금했어요 | 있었다 | mc3 문항이 헷갈렸어요 | 없었다 |  | 체크리스트 간격을 좀 더 줬으면 | 20분 이상~30분 미만 | 010-1234-5678 |
+| K7QX2M9P | … | final |  |  |  |  |  |  | 인간+AI 혼합 유형 | 탐색 과정이 재미있어서... | 가끔 추천 이유가 궁금했어요 | 20분 이상 30분 미만 | 있었다. | mc3 문항이 헷갈렸어요 | 없었다. |  | 체크리스트 간격을 좀 더 줬으면 | 010-1234-5678 |
 
 > **`PreContact`는 이 프로토타입 전체에서 유일하게 실제 개인식별정보(휴대전화 번호)가
 > 들어가는 필드**입니다 — 나머지 모든 데이터(`ParticipantName` 포함)는 처음부터 익명
@@ -90,22 +90,24 @@
 
 **2단계 — 파일럿 소감** (파일럿 전용, 본실험 폼에는 없는 필드들)
 
+화면에 보이는 순서 그대로입니다 — 소요 시간 질문이 맨 처음, 개선 제안이 맨 마지막입니다.
+
 | 필드 | 문항 | id (`pilotSurveyItems`) | 비고 |
 |---|---|---|---|
-| PilotConfusingItems | 설문 문항을 이해하거나 응답하는 데 어려운 부분이 있었습니까? (없었다/있었다) | pilot_confusing_items | 필수 |
-| PilotConfusingItemsDetail | '있었다'를 선택한 경우, 어떤 문항이 어려웠는지 적어주십시오. | pilot_confusing_items 항목의 followUp | 선택 |
-| PilotConfusingSteps | 연구를 진행하면서 다음에 무엇을 해야 하는지 이해하기 어렵거나 헷갈린 순간이 있었습니까? (없었다/있었다) | pilot_confusing_steps | 필수 |
-| PilotConfusingStepsDetail | '있었다'를 선택한 경우, 어느 단계에서 어떤 점이 어려웠는지 적어주십시오. | pilot_confusing_steps 항목의 followUp | 선택 |
-| PilotImprovementSuggestion | 프로토타입 또는 연구 절차에서 수정하거나 개선할 필요가 있다고 느낀 부분이 있다면 자유롭게 적어주십시오. | pilot_improvement_suggestion | 선택 |
-| PilotDuration | 이번 파일럿 연구의 전체 과정을 완료하는 데 대략 얼마나 걸렸습니까? (20분 미만/20분 이상~30분 미만/30분 이상~40분 미만/40분 이상~50분 미만/50분 이상) | pilot_duration | 필수 |
+| PilotDuration | 이번 파일럿 연구의 전체 과정을 완료하는 데 대략 얼마나 걸렸습니까? (20분 미만/20분 이상 30분 미만/30분 이상 40분 미만/40분 이상 50분 미만/50분 이상/기억이 나지 않음 — "~" 없이, "기억이 나지 않음" 포함 6개) | pilot_duration | 필수 |
+| PilotConfusingItems | 설문 문항을 이해하거나 응답하는 데 어려운 부분이 있었나요? (있었다./없었다. — 마침표 포함, 이 순서로) | pilot_confusing_items | 필수 |
+| PilotConfusingItemsDetail | '있었다'를 선택한 경우, 어떤 문항이 어려웠는지 적어주세요. | pilot_confusing_items 항목의 followUp | 선택 |
+| PilotConfusingSteps | 여행 계획 과업을 진행하면서 다음에 무엇을 해야 하는지 이해하기 어렵거나 헷갈린 순간이 있었나요? (있었다./없었다. — 마침표 포함, 이 순서로) | pilot_confusing_steps | 필수 |
+| PilotConfusingStepsDetail | '있었다'를 선택한 경우, 어느 단계에서 어떤 점이 어려웠는지 적어주세요. | pilot_confusing_steps 항목의 followUp | 선택 |
+| PilotImprovementSuggestion | 프로토타입 또는 연구 절차에서 수정하거나 개선할 필요가 있다고 느낀 부분이 있다면 자유롭게 적어주세요. | pilot_improvement_suggestion | 선택 |
 
 "선택" 표시된 두 필드(`*Detail`)는 화면에서도 실제로 선택 응답입니다 — 참가자가
 비워두고 제출해도 정상 처리되며, 그 경우 시트의 해당 칸은 그냥 빈 채로 남습니다. 다만
 폼 자체에는 이 필드가 반드시 존재해야 하므로(참가자가 답을 입력하면 어딘가로는 가야
 하니까), 폼 만드실 때 **필수 응답으로 설정하지 마세요** — 그 외에는 일반 단답형/서술형
-필드로 만들면 됩니다. `PilotConfusingItems`/`PilotConfusingSteps`/`PilotDuration`은
+필드로 만들면 됩니다. `PilotDuration`/`PilotConfusingItems`/`PilotConfusingSteps`는
 정확히 위 괄호 안 선택지 문구 그대로 객관식으로 만들어 주세요 — 문구가 한 글자라도
-다르면 Forms가 제출을 거부합니다.
+(마침표 포함) 다르면 Forms가 제출을 거부합니다.
 
 **3단계 — 보상**
 

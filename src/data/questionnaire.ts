@@ -198,40 +198,50 @@ export const pilotSurveyDescription = "프로토타입과 연구 절차를 개�
 
 export const pilotSurveyItems: QuestionnaireItem[] = [
   {
+    id: "pilot_duration",
+    type: "choice",
+    question: "이번 파일럿 연구의 전체 과정을 완료하는 데 대략 얼마나 걸렸습니까?",
+    // No "~" between the range bounds, and "기억이 나지 않음" tacked on at
+    // the end — matches the live Google Form's actual option text
+    // (confirmed via screenshot), not the original draft wording.
+    options: [
+      "20분 미만",
+      "20분 이상 30분 미만",
+      "30분 이상 40분 미만",
+      "40분 이상 50분 미만",
+      "50분 이상",
+      "기억이 나지 않음",
+    ],
+  },
+  {
     id: "pilot_confusing_items",
     type: "choice",
-    question: "설문 문항을 이해하거나 응답하는 데 어려운 부분이 있었습니까?",
-    options: ["없었다", "있었다"],
+    question: "설문 문항을 이해하거나 응답하는 데 어려운 부분이 있었나요?",
+    options: ["있었다.", "없었다."],
     followUp: {
-      option: "있었다",
+      option: "있었다.",
       id: "pilot_confusing_items_detail",
-      question: "'있었다'를 선택한 경우, 어떤 문항이 어려웠는지 적어주십시오.",
+      question: "'있었다'를 선택한 경우, 어떤 문항이 어려웠는지 적어주세요.",
       optional: true,
     },
   },
   {
     id: "pilot_confusing_steps",
     type: "choice",
-    question: "연구를 진행하면서 다음에 무엇을 해야 하는지 이해하기 어렵거나 헷갈린 순간이 있었습니까?",
-    options: ["없었다", "있었다"],
+    question: "여행 계획 과업을 진행하면서 다음에 무엇을 해야 하는지 이해하기 어렵거나 헷갈린 순간이 있었나요?",
+    options: ["있었다.", "없었다."],
     followUp: {
-      option: "있었다",
+      option: "있었다.",
       id: "pilot_confusing_steps_detail",
-      question: "'있었다'를 선택한 경우, 어느 단계에서 어떤 점이 어려웠는지 적어주십시오.",
+      question: "'있었다'를 선택한 경우, 어느 단계에서 어떤 점이 어려웠는지 적어주세요.",
       optional: true,
     },
   },
   {
     id: "pilot_improvement_suggestion",
     type: "text",
-    question: "프로토타입 또는 연구 절차에서 수정하거나 개선할 필요가 있다고 느낀 부분이 있다면 자유롭게 적어주십시오.",
+    question: "프로토타입 또는 연구 절차에서 수정하거나 개선할 필요가 있다고 느낀 부분이 있다면 자유롭게 적어주세요.",
     optional: true,
-  },
-  {
-    id: "pilot_duration",
-    type: "choice",
-    question: "이번 파일럿 연구의 전체 과정을 완료하는 데 대략 얼마나 걸렸습니까?",
-    options: ["20분 미만", "20분 이상~30분 미만", "30분 이상~40분 미만", "40분 이상~50분 미만", "50분 이상"],
   },
 ];
 
