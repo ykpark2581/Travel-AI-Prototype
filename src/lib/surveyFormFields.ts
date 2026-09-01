@@ -1,19 +1,21 @@
 // PILOT BRANCH — this Google Form is entirely separate from the main
 // study's (different branch, different deployment, different sheet) so
-// pilot responses never mix with real study data. Every entry ID below is
-// still a placeholder ("REPLACE_entry_id") because the pilot form hasn't
-// been built yet — see the bottom of this file for the exact field list to
-// create, and docs/SURVEY_SETUP.md for how the "get a pre-filled link,
-// fill every field with a distinguishable value, read the entry IDs back
-// out of the URL" workflow works (same one used to wire up the main
-// study's form, just repeated here for a fresh form).
+// pilot responses never mix with real study data. Built by duplicating the
+// main study's form (see docs/SURVEY_SETUP.md) — confirmed live via a
+// fresh pre-filled-link URL that every field SHARED with the main study
+// (ParticipantName, timestamp, type, Q1..Q10, PreAge..PreAiTrust,
+// Final_satisfaction*, PreContact) kept the exact same entry IDs the
+// duplicate started with, so this file's values below are identical to
+// main's for those — only the Pilot* fields (added fresh after
+// duplicating) have new entry IDs of their own.
 //
 // Forms' formResponse endpoint accepts anonymous POSTs by design (the same
 // way the form's own HTML submits) — none of this is secret, it's just the
 // form's public submission target and its field IDs (visible to anyone who
 // opens the form's page source), so it's fine to commit directly rather
 // than routing through env vars.
-export const SURVEY_FORM_ACTION_URL = "REPLACE_pilot_form_action_url";
+export const SURVEY_FORM_ACTION_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdq5ioPoExp_TDZA2T-F9IzUIDTmpLirttL7Vtvc62DvQFTpg/formResponse";
 
 // Sheet column layout this maps to, once the pilot form exists:
 //   ParticipantName | timestamp | type | Q1..Q10 | PreAge..PreAiTrust |
@@ -44,23 +46,25 @@ export const SURVEY_FORM_ACTION_URL = "REPLACE_pilot_form_action_url";
 // ever needs that analysis too; api/survey/route.ts already skips any
 // field still at that placeholder rather than posting a bogus field name.
 export const SURVEY_FORM_ENTRY_IDS = {
-  participantName: "REPLACE_entry_id",
-  timestamp: "REPLACE_entry_id",
-  type: "REPLACE_entry_id",
+  participantName: "entry.1869276090",
+  timestamp: "entry.1550281067",
+  type: "entry.1787919474",
+  // Not in the form — see comment above; safe to leave as a placeholder,
+  // api/survey/route.ts skips it.
   destination: "REPLACE_entry_id",
-  q1: "REPLACE_entry_id",
-  q2: "REPLACE_entry_id",
-  q3: "REPLACE_entry_id",
-  q4: "REPLACE_entry_id",
-  q5: "REPLACE_entry_id",
-  q6: "REPLACE_entry_id",
-  q7: "REPLACE_entry_id",
-  q8: "REPLACE_entry_id",
-  q9: "REPLACE_entry_id",
-  q10: "REPLACE_entry_id",
-  finalSatisfaction: "REPLACE_entry_id",
-  finalSatisfactionReason: "REPLACE_entry_id",
-  finalImprovementFeedback: "REPLACE_entry_id",
+  q1: "entry.282647127",
+  q2: "entry.1228737351",
+  q3: "entry.1978038477",
+  q4: "entry.518947699",
+  q5: "entry.1023376503",
+  q6: "entry.1750805791",
+  q7: "entry.413689287",
+  q8: "entry.1476911649",
+  q9: "entry.1524723363",
+  q10: "entry.266222582",
+  finalSatisfaction: "entry.442364441",
+  finalSatisfactionReason: "entry.1371033330",
+  finalImprovementFeedback: "entry.1580838968",
   // Not in the pilot form — see comment above.
   block: "REPLACE_entry_id",
   conditionOrder: "REPLACE_entry_id",
@@ -69,33 +73,37 @@ export const SURVEY_FORM_ENTRY_IDS = {
   // Pre-survey's own 9 dedicated fields (see data/questionnaire.ts's
   // preSurveyItems, same order/ids) — NOT the Q1..Q10 fields above, which
   // stay reserved for conditionSurveyItems.
-  preAge: "REPLACE_entry_id",
-  preGender: "REPLACE_entry_id",
-  preExploreBreadth: "REPLACE_entry_id",
-  preExploreCompare: "REPLACE_entry_id",
-  prePlanEarly: "REPLACE_entry_id",
-  prePlanDetailed: "REPLACE_entry_id",
-  preAiFreq: "REPLACE_entry_id",
-  preAiTravelFreq: "REPLACE_entry_id",
-  preAiTrust: "REPLACE_entry_id",
+  preAge: "entry.1648875806",
+  preGender: "entry.1942451706",
+  preExploreBreadth: "entry.1933158650",
+  preExploreCompare: "entry.565548915",
+  prePlanEarly: "entry.1167414279",
+  prePlanDetailed: "entry.1789510013",
+  preAiFreq: "entry.682289271",
+  preAiTravelFreq: "entry.23303149",
+  preAiTrust: "entry.1881472389",
   // Reward step's phone question (see data/questionnaire.ts's
   // rewardSurveyItems) — posted from api/survey/route.ts's final-row
   // branch. PILOT BRANCH: no interview-consent field at all here — unlike
   // the main study, pilot participants are never asked about a follow-up
   // interview (see rewardSurveyItems' own comment for why).
-  preContact: "REPLACE_entry_id",
+  preContact: "entry.1027892861",
   // PILOT BRANCH ONLY — index-aligned with data/questionnaire.ts's
   // pilotSurveyItems. The two "*Detail" fields back the follow-up textareas
-  // that only show once "있었다" is picked (see QuestionnaireChoiceItem's
+  // that only show once "있었다." is picked (see QuestionnaireChoiceItem's
   // followUp) — they're optional answers, but still need their own real
   // field on the form (an empty answer just never gets posted, see
-  // api/survey/route.ts's `set` helper).
-  pilotConfusingItems: "REPLACE_entry_id",
-  pilotConfusingItemsDetail: "REPLACE_entry_id",
-  pilotConfusingSteps: "REPLACE_entry_id",
-  pilotConfusingStepsDetail: "REPLACE_entry_id",
-  pilotImprovementSuggestion: "REPLACE_entry_id",
-  pilotDuration: "REPLACE_entry_id",
+  // api/survey/route.ts's `set` helper). Confirmed live via a fresh
+  // pre-filled-link URL, matched to pilotSurveyItems by which
+  // distinguishable dummy value landed where, in on-screen order (duration
+  // → confusing_items → its detail → confusing_steps → its detail →
+  // improvement_suggestion).
+  pilotDuration: "entry.7767788",
+  pilotConfusingItems: "entry.1471723402",
+  pilotConfusingItemsDetail: "entry.1091252102",
+  pilotConfusingSteps: "entry.1701563343",
+  pilotConfusingStepsDetail: "entry.891992750",
+  pilotImprovementSuggestion: "entry.2103885115",
 } as const;
 
 // The columns the pilot form needs before submissions can go through.
@@ -142,9 +150,10 @@ export const SURVEY_FORM_CONFIGURED =
   REQUIRED_ENTRY_KEYS.every((key) => !SURVEY_FORM_ENTRY_IDS[key].startsWith("REPLACE_"));
 
 // ---------------------------------------------------------------------
-// Fields to create on the pilot Google Form (see docs/SURVEY_SETUP.md for
-// the full main-study field reference this mirrors — same shape, new form,
-// new entry IDs):
+// The pilot form is built now (see SURVEY_FORM_ACTION_URL/entry IDs above,
+// confirmed live). Kept below as a field reference for anyone rebuilding
+// or auditing the form later (see docs/SURVEY_SETUP.md for the full
+// write-up):
 //
 //   ParticipantName, timestamp, type            (short answer)
 //   Q1..Q10                                     (short answer or 1-7 scale)
@@ -182,10 +191,4 @@ export const SURVEY_FORM_CONFIGURED =
 // first, then confusing-items/-steps, improvement-suggestion last) — the
 // sheet COLUMN order doesn't have to match this, but the form's own
 // question order might as well, since that's what the participant sees.
-//
-// Once built, use the form's own "⋮ → 사전 채우기 링크 받기" feature,
-// fill EVERY question with its own distinguishable dummy value, hit "링크
-// 받기", and send the resulting URL over — its querystring carries every
-// field's entry ID at once, so all of the "REPLACE_entry_id" placeholders
-// above (and the action URL itself) can be filled in from that one link.
 // ---------------------------------------------------------------------
