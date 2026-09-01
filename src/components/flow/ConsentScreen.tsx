@@ -8,7 +8,7 @@ import { consentContent } from "@/data/onboarding";
 import { useExperimentStore } from "@/lib/store";
 
 // Turns a bare email address inside `text` into a clickable mailto link —
-// e.g. consentContent.contactBox's "문의처: ykpark@yonsei.ac.kr" line (see
+// e.g. consentContent.contactBox's "박윤경 (ykpark@yonsei.ac.kr)" line (see
 // data/onboarding.ts) — without needing a dedicated per-field `email`
 // field the way an earlier version of this content did.
 function linkifyEmail(text: string) {
@@ -55,10 +55,17 @@ export function ConsentScreen() {
       <div className="mt-6 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm leading-relaxed">
         <p className="text-muted-foreground">{consentContent.contactBox.intro}</p>
         <div className="mt-2 space-y-1">
-          {consentContent.contactBox.lines.map((line) => (
-            <p key={line.label}>
-              <span className="font-medium text-foreground">{line.label}</span>
-              <span className="text-muted-foreground">: </span>
+          {consentContent.contactBox.lines.map((line, i) => (
+            <p key={i}>
+              {/* Empty label (see data/onboarding.ts's contactBox comment)
+                  — a continuation line under the PREVIOUS line's label, so
+                  it renders the value alone with no leading ": ". */}
+              {line.label && (
+                <>
+                  <span className="font-medium text-foreground">{line.label}</span>
+                  <span className="text-muted-foreground">: </span>
+                </>
+              )}
               {linkifyEmail(line.value)}
             </p>
           ))}
