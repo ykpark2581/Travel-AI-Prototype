@@ -217,7 +217,7 @@ export const rewardSurveyItems: QuestionnaireItem[] = [
     // rewardSurveyNotes' phone-usage note below, which reads as reassurance
     // AFTER already typing the number.
     description:
-      "사후 인터뷰는 약 20~30분간 온라인으로 진행됩니다. 참여 의향을 밝힌 참가자 중 일부를 인터뷰 대상자로 선정하여 별도로 연락드리며, 인터뷰 완료 시 5,000원 상당의 커피 상품권을 추가로 지급합니다.",
+      "심층면담은 본실험 일자와 다른 날에 약 20~30분간 비대면 전화 방식으로 진행되며, 면담 완료 시 5,000원 상당의 커피 모바일 상품권을 추가로 지급합니다.",
     options: [interviewConsentYesLabel, "아니요."],
   },
 ];
@@ -229,6 +229,6 @@ export const rewardSurveyItems: QuestionnaireItem[] = [
 export const rewardSurveyNotes = [
   {
     afterId: "phone",
-    text: "입력한 번호는 모바일 상품권 지급 목적으로만 사용하며, 지급 완료 후 즉시 폐기합니다. 단, 아래 문항에서 사후 인터뷰 참여 의향을 밝힌 경우에는 인터뷰 대상자 선정 및 일정 안내를 위해서도 사용합니다.",
+    text: "본실험 완료자에게 2,000원 상당의 커피 모바일 상품권을 지급하기 위해 휴대전화번호를 수집합니다. 심층면담 참여 의향을 밝힌 경우에는 해당 번호를 면담 대상자 연락, 일정 조율, 전화 면담 진행 및 보상 지급에도 이용합니다. 휴대전화번호는 연구 분석에 사용하지 않으며, 보상 지급과 면담 등 이용 목적이 모두 완료된 후 즉시 폐기합니다.",
   },
 ];
