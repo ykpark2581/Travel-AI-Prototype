@@ -39,11 +39,22 @@ export function ConsentScreen() {
           // data/onboarding.ts) — no bold label line for that one.
           <div key={p.heading || `intro-${idx}`}>
             {p.heading && <p className="text-sm font-semibold text-foreground">{p.heading}</p>}
-            {p.body.map((line, i) => (
-              <p key={i} className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {linkifyEmail(line)}
-              </p>
-            ))}
+            {p.body.map((line, i) =>
+              // An empty string is a deliberate spacer (see
+              // data/onboarding.ts) — extra breathing room between two
+              // sub-topics crammed into the same numbered section (e.g.
+              // section 2's criteria bullets vs. the screening-notice
+              // paragraph vs. the numbered procedure steps), rather than
+              // every line getting the same uniform gap regardless of how
+              // related it is to the line before it.
+              line === "" ? (
+                <div key={i} className="mt-3" />
+              ) : (
+                <p key={i} className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {linkifyEmail(line)}
+                </p>
+              )
+            )}
           </div>
         ))}
       </div>
