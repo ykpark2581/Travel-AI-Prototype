@@ -217,7 +217,7 @@ export const rewardSurveyItems: QuestionnaireItem[] = [
     // rewardSurveyNotes' phone-usage note below, which reads as reassurance
     // AFTER already typing the number.
     description:
-      "심층면담은 본실험 일자와 다른 날에 약 20~30분간 비대면 전화 방식으로 진행되며, 면담 완료 시 5,000원 상당의 커피 모바일 상품권을 추가로 지급합니다.",
+      "심층면담은 본실험 일자와 다른 날에 약 20~30분간 비대면 전화 방식으로 진행되며, 면담 완료 시 5,000원 상당의 커피 모바일 상품권을 추가로 지급합니다. 심층면담 참여 의향을 밝힌 참가자 중 15명을 무작위로 선정하며, 참여 의향을 밝힌 것만으로 면담 참여가 확정되는 것은 아닙니다. 선정된 참가자는 별도의 심층면담 연구참여자 설명문과 동의서를 확인하고 전자동의를 완료한 경우에만 면담에 참여하게 됩니다.",
     options: [interviewConsentYesLabel, "아니요."],
   },
 ];
