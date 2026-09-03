@@ -197,7 +197,7 @@ export const likertScaleSize = 7;
 // interview_consent questions). Phone number is collected from EVERYONE
 // (it's the reward, not an interview opt-in) — interview_consent is the
 // only genuinely optional piece here.
-export const rewardSurveyTitle = "보상 및 사후 인터뷰 안내";
+export const rewardSurveyTitle = "보상 및 심층면담 안내";
 export const rewardSurveyDescription = "본 실험을 완료한 참가자에게 2,000원 상당의 모바일 상품권을 지급합니다.";
 
 export const rewardSurveyItems: QuestionnaireItem[] = [
@@ -210,14 +210,14 @@ export const rewardSurveyItems: QuestionnaireItem[] = [
   {
     id: "interview_consent",
     type: "choice",
-    question: "사후 인터뷰에 참여할 의향이 있으십니까?",
+    question: "심층면담에 참여할 의향이 있으십니까?",
     // Renders under the question text, above the yes/no choices (see
     // types/index.ts's QuestionnaireChoiceItem/SurveyForm.tsx's
     // QuestionBlock) — this needs to be read BEFORE deciding, unlike
     // rewardSurveyNotes' phone-usage note below, which reads as reassurance
     // AFTER already typing the number.
     description:
-      "심층면담은 본실험 일자와 다른 날에 약 20~30분간 비대면 전화 방식으로 진행되며, 면담 완료 시 5,000원 상당의 커피 모바일 상품권을 추가로 지급합니다. 심층면담 참여 의향을 밝힌 참가자 중 15명을 무작위로 선정하며, 참여 의향을 밝힌 것만으로 면담 참여가 확정되는 것은 아닙니다. 선정된 참가자는 별도의 심층면담 연구참여자 설명문과 동의서를 확인하고 전자동의를 완료한 경우에만 면담에 참여하게 됩니다.",
+      "심층면담은 본실험과 다른 날에 약 20~30분간 비대면 전화로 진행됩니다. 참여 의향자 중 12명을 무작위로 선정하므로, 참여 의향을 밝히더라도 면담 참여가 확정되는 것은 아닙니다.",
     options: [interviewConsentYesLabel, "아니요."],
   },
 ];
@@ -229,6 +229,6 @@ export const rewardSurveyItems: QuestionnaireItem[] = [
 export const rewardSurveyNotes = [
   {
     afterId: "phone",
-    text: "본실험 완료자에게 2,000원 상당의 커피 모바일 상품권을 지급하기 위해 휴대전화번호를 수집합니다. 심층면담 참여 의향을 밝힌 경우에는 해당 번호를 면담 대상자 연락, 일정 조율, 전화 면담 진행 및 보상 지급에도 이용합니다. 휴대전화번호는 연구 분석에 사용하지 않으며, 보상 지급과 면담 등 이용 목적이 모두 완료된 후 즉시 폐기합니다.",
+    text: "입력한 휴대전화번호는 보상 지급 및 심층면담 관련 연락에만 이용하며, 이용 목적이 완료된 후 폐기합니다.",
   },
 ];
