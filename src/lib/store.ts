@@ -5,6 +5,7 @@ import type {
   Condition,
   DayPlan,
   DestinationBundle,
+  DestinationId,
   ExplorationStage,
   Interest,
   ItemSignals,
@@ -13,7 +14,12 @@ import type {
   StageId,
   TravelStyleTag,
 } from "@/types";
-import { BASE_CONDITION_ORDER, CONDITION_DESTINATION, shuffleConditionOrder } from "@/data/conditions";
+import {
+  BASE_CONDITION_ORDER,
+  CONDITION_DESTINATION,
+  shuffleConditionDestinationMap,
+  shuffleConditionOrder,
+} from "@/data/conditions";
 import { getDestinationBundle } from "@/data/destinations";
 import * as dialogue from "@/data/dialogue";
 import { generateItinerary, generateItineraryFromDayPlan, ACTIVITY_SLOTS, RESTAURANT_SLOTS } from "@/lib/itinerary";
@@ -118,6 +124,12 @@ interface ExperimentState {
   // Rolled fresh per participant in acceptConsent(); BASE_CONDITION_ORDER is
   // only the safe default before that (see data/conditions.ts).
   conditionOrder: Condition[];
+  // Rolled fresh per participant in acceptConsent(), independently of
+  // conditionOrder above — which destination (vietnam/bangkok/taiwan) each
+  // condition uses this run, so destination doesn't stay fixed to a
+  // specific condition across participants. CONDITION_DESTINATION is only
+  // the safe default before that (see data/conditions.ts).
+  conditionDestinationMap: Record<Condition, DestinationId>;
   conditionIndex: number;
   condition: Condition;
   destinationBundle: DestinationBundle;
@@ -977,6 +989,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     // Deterministic default (see BASE_CONDITION_ORDER) — replaced with a real
     // shuffle in acceptConsent(), the first client-only user action.
     conditionOrder: BASE_CONDITION_ORDER,
+    conditionDestinationMap: CONDITION_DESTINATION,
     conditionIndex: 0,
     condition: BASE_CONDITION_ORDER[0],
     destinationBundle: getDestinationBundle(CONDITION_DESTINATION[BASE_CONDITION_ORDER[0]]),
@@ -1021,12 +1034,14 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
       // mismatch from randomizing at module-load time).
       ensureParticipantId();
       const conditionOrder = shuffleConditionOrder();
+      const conditionDestinationMap = shuffleConditionDestinationMap();
       const condition = conditionOrder[0];
       set({
         phase: "pre-survey",
         conditionOrder,
+        conditionDestinationMap,
         condition,
-        destinationBundle: getDestinationBundle(CONDITION_DESTINATION[condition]),
+        destinationBundle: getDestinationBundle(conditionDestinationMap[condition]),
       });
     },
     completePreSurvey: () => set({ phase: "instructions" }),
@@ -1319,10 +1334,10 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     },
 
     advanceToNextCondition: () => {
-      const { conditionIndex, conditionOrder } = get();
+      const { conditionIndex, conditionOrder, conditionDestinationMap } = get();
       const nextIndex = conditionIndex + 1;
       const nextCondition = conditionOrder[nextIndex];
-      const nextBundle = getDestinationBundle(CONDITION_DESTINATION[nextCondition]);
+      const nextBundle = getDestinationBundle(conditionDestinationMap[nextCondition]);
       set({
         conditionIndex: nextIndex,
         condition: nextCondition,

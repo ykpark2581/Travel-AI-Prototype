@@ -41,16 +41,20 @@ export const SURVEY_FORM_ACTION_URL =
 // The old q7/q8 (entry.1171806374/entry.1074795925) are gone from the form
 // entirely, not reused here.
 //
-// destination/block/conditionOrder/likedActivityCount/likedRestaurantCount
-// are NOT in the current form. Left as "REPLACE_..." placeholders;
-// api/survey/route.ts skips any field still at that placeholder rather
-// than posting a bogus field name, so this is safe to leave as-is or fill
-// in later if the form gets these fields added.
+// destination now has its own field on the form (entry.227310911, added
+// once destination stopped being fixed per-condition — see
+// data/conditions.ts's shuffleConditionDestinationMap — so which city a
+// given condition row used is actually recorded). block/conditionOrder/
+// likedActivityCount/likedRestaurantCount are still NOT in the current
+// form, left as "REPLACE_..." placeholders; api/survey/route.ts skips any
+// field still at that placeholder rather than posting a bogus field name,
+// so those are safe to leave as-is or fill in later if the form gets them
+// added.
 export const SURVEY_FORM_ENTRY_IDS = {
   participantName: "entry.1869276090",
   timestamp: "entry.1550281067",
   type: "entry.1787919474",
-  destination: "REPLACE_entry_id",
+  destination: "entry.227310911",
   q1: "entry.282647127",
   q2: "entry.1228737351",
   q3: "entry.1978038477",
@@ -114,12 +118,14 @@ export const SURVEY_FORM_ENTRY_IDS = {
   preInterviewConsent: "entry.1921088397",
 } as const;
 
-// The columns the form actually has — destination isn't among them (see
-// comment above), so SURVEY_FORM_CONFIGURED doesn't require it either.
+// The columns the form actually has — block/conditionOrder/
+// likedActivityCount/likedRestaurantCount aren't among them (see comment
+// above), so SURVEY_FORM_CONFIGURED doesn't require those.
 const REQUIRED_ENTRY_KEYS = [
   "participantName",
   "timestamp",
   "type",
+  "destination",
   "q1",
   "q2",
   "q3",

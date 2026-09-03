@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { FullScreenCard } from "@/components/flow/FullScreenCard";
-import { CONDITION_DESTINATION } from "@/data/conditions";
 import { getDestinationBundle } from "@/data/destinations";
 import { transitionButton, transitionDescription, transitionTitle } from "@/data/dialogue";
 import { useExperimentStore } from "@/lib/store";
@@ -10,11 +9,15 @@ import { useExperimentStore } from "@/lib/store";
 export function TransitionScreen() {
   const conditionIndex = useExperimentStore((s) => s.conditionIndex);
   const conditionOrder = useExperimentStore((s) => s.conditionOrder);
+  const conditionDestinationMap = useExperimentStore((s) => s.conditionDestinationMap);
   const advanceToNextCondition = useExperimentStore((s) => s.advanceToNextCondition);
 
   const completedNumber = conditionIndex + 1;
   const nextCondition = conditionOrder[conditionIndex + 1];
-  const nextCity = getDestinationBundle(CONDITION_DESTINATION[nextCondition]).meta.city;
+  // Reads the participant's own rolled mapping (see store.ts's acceptConsent)
+  // rather than the static CONDITION_DESTINATION default — which destination
+  // comes next now varies per participant, not just which condition does.
+  const nextCity = getDestinationBundle(conditionDestinationMap[nextCondition]).meta.city;
 
   return (
     <FullScreenCard>
