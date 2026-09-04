@@ -162,9 +162,9 @@ URL을 저에게 전달해주세요 — `entry.XXXXXXX` ID를 매칭해서 `src/
    단축키라 사전 설문 제출을 테스트할 수 없습니다. 동의 화면 → 사전 설문 제출까지 한
    번 해보고, 이후에는 `?preview=human` 등으로 조건 하나를 끝까지 진행합니다.
 2. 조건 종료 설문을 제출합니다.
-3. 최종 설문을 확인하려면 `?preview=survey`로 곧장 진입할 수 있습니다 — "마지막 설문"
-   (fs1/fs2/fs3)에서 "다음"을 눌러도 아직 아무것도 제출되지 않으니, 이 시점에 새 응답이
-   생기지 않는 게 정상입니다. 이어지는 "보상 및 사후 인터뷰 안내"(phone/
+3. 최종 설문을 확인하려면 `?preview=survey`로 곧장 진입할 수 있습니다 — "최종 선호 및
+   종합 평가"(fs1/fs2/fs3)에서 "다음"을 눌러도 아직 아무것도 제출되지 않으니, 이 시점에
+   새 응답이 생기지 않는 게 정상입니다. 이어지는 "보상 및 심층면담 안내"(phone/
    interview_consent)까지 답하고 "제출"을 눌러야 최종 행 하나가 5개 필드
    (Final_satisfaction/Final_satisfaction_reason/Final_improvement_feedback/
    PreContact/PreInterviewConsent)를 모두 채운 채로 제출됩니다.

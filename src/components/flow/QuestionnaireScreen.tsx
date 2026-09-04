@@ -87,7 +87,7 @@ export function QuestionnaireScreen() {
 
   return (
     <FullScreenCard className="max-w-2xl">
-      <h1 className="text-xl font-semibold">마지막 설문</h1>
+      <h1 className="text-xl font-semibold">최종 선호 및 종합 평가</h1>
       <p className="mt-2 text-sm text-muted-foreground">방금 경험한 세 가지 여행 계획 과정을 떠올리며 답변해 주세요.</p>
 
       <div className="mt-8">
