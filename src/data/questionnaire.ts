@@ -1,5 +1,58 @@
 import type { QuestionnaireItem } from "@/types";
 
+// Shown once, right after consent — before pre-survey (see store.ts's phase
+// "screening", between "consent" and "pre-survey" — ScreeningScreen.tsx).
+// Gates access to the actual study against the selection/exclusion
+// criteria consentContent already describes (data/onboarding.ts) — a
+// participant who fails any item is routed to the "screening-failed"
+// terminal phase (ScreeningFailedScreen.tsx) instead of pre-survey. Never
+// submitted anywhere, passed or failed — the researcher was explicit that
+// ineligible participants' answers don't need to be recorded, and this
+// only ever decides which phase to advance to (see store.ts's
+// submitScreening).
+export const screeningTitle = "연구 참여 조건 스크리닝 설문";
+export const screeningDescription =
+  "본 설문은 연구의 참여 조건을 확인하기 위한 간단한 사전 설문입니다. 현재 상황에 맞게 솔직하게 응답해 주세요.";
+
+export const screeningItems: QuestionnaireItem[] = [
+  {
+    id: "screening_prior_participation",
+    type: "choice",
+    question: "본실험에 참여한 경험이 있습니까?",
+    options: ["예", "아니요"],
+  },
+  {
+    id: "screening_age",
+    type: "choice",
+    question: "귀하의 연령대를 선택해 주세요.",
+    options: ["20세 미만", "20대", "30대", "40대", "50대 이상"],
+  },
+  {
+    id: "screening_pc",
+    type: "choice",
+    question: "본 연구에 참여할 때 인터넷에 연결된 PC(데스크톱 또는 노트북)를 이용할 수 있습니까?",
+    options: ["예, 이용할 수 있습니다.", "아니요, 이용할 수 없습니다."],
+  },
+  {
+    id: "screening_ai_experience",
+    type: "choice",
+    question: "ChatGPT, Gemini, Claude 등의 대화형 생성형 AI 서비스를 사용해 본 경험이 있습니까?",
+    options: ["예, 사용해 본 경험이 있습니다.", "아니요, 사용해 본 경험이 없습니다."],
+  },
+];
+
+// The answer(s) that count as a PASS for each screeningItems id — an item
+// whose answer isn't in its set fails screening. Matched 1:1 against
+// consentContent's 선정기준/제외기준 (data/onboarding.ts): no prior
+// main-study participation, age 20s/30s/40s, internet-connected PC
+// available, prior generative-AI usage experience.
+export const screeningPassAnswers: Record<string, string[]> = {
+  screening_prior_participation: ["아니요"],
+  screening_age: ["20대", "30대", "40대"],
+  screening_pc: ["예, 이용할 수 있습니다."],
+  screening_ai_experience: ["예, 사용해 본 경험이 있습니다."],
+};
+
 // Shown once, before consent leads into instructions/the first condition
 // (see store.ts's phase "pre-survey", between "consent" and "instructions"
 // — PreSurveyScreen.tsx). Reuses the SAME Google Form/sheet as every other
@@ -15,7 +68,7 @@ import type { QuestionnaireItem } from "@/types";
 // wording (confirmed against a live pre-filled-link URL), not a draft.
 export const preSurveyTitle = "사전 설문";
 export const preSurveyDescription =
-  "실험을 시작하기 전에 평소 여행 계획 방식과 AI 사용 경험에 대해 몇 가지 질문을 드립니다.";
+  "참여 조건이 확인되었습니다. 실험에 앞서 평소 여행 계획 방식과 AI 사용 경험에 관한 사전설문을 진행해 주세요.";
 
 // The exact option string for rewardSurveyItems' interview_consent below
 // (exported rather than left as a literal only that item knows) so

@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useExperimentStore } from "@/lib/store";
 import { ConsentScreen } from "@/components/flow/ConsentScreen";
+import { ScreeningScreen } from "@/components/flow/ScreeningScreen";
+import { ScreeningFailedScreen } from "@/components/flow/ScreeningFailedScreen";
 import { PreSurveyScreen } from "@/components/flow/PreSurveyScreen";
 import { IntroductionScreen } from "@/components/flow/IntroductionScreen";
 import { TransitionScreen } from "@/components/flow/TransitionScreen";
@@ -35,6 +37,10 @@ export function ExperimentFlow() {
   switch (phase) {
     case "consent":
       return <ConsentScreen />;
+    case "screening":
+      return <ScreeningScreen />;
+    case "screening-failed":
+      return <ScreeningFailedScreen />;
     case "pre-survey":
       return <PreSurveyScreen />;
     case "instructions":

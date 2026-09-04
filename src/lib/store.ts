@@ -40,7 +40,16 @@ import {
   typingDurationMs,
 } from "@/lib/constants";
 
-type Phase = "consent" | "pre-survey" | "instructions" | "planning" | "condition-survey" | "transition" | "questionnaire";
+type Phase =
+  | "consent"
+  | "screening"
+  | "screening-failed"
+  | "pre-survey"
+  | "instructions"
+  | "planning"
+  | "condition-survey"
+  | "transition"
+  | "questionnaire";
 
 const makeId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -274,7 +283,17 @@ interface ExperimentState {
   // proceedToConditionSurvey (the popup's own "평가하기" button).
   showConditionCompletePopup: boolean;
 
+  // Advances from consent straight to the screening phase now (see
+  // submitScreening below) — no longer rolls the participant id/condition
+  // order/destination map itself, since a participant who fails screening
+  // never becomes a real study participant at all.
   acceptConsent: () => void;
+  // ScreeningScreen.tsx's "제출하기" — `passed` is computed there against
+  // data/questionnaire.ts's screeningPassAnswers. On pass, rolls the
+  // participant id/condition order/destination map (what acceptConsent used
+  // to do directly) and moves to pre-survey; on fail, moves to the terminal
+  // "screening-failed" phase. Neither outcome is ever recorded anywhere.
+  submitScreening: (passed: boolean) => void;
   // Pre-survey's own "제출하기" (see PreSurveyScreen.tsx) — the survey row
   // itself is submitted by that screen (submitSurveyRow, kind:"presurvey"),
   // this just advances the phase once that's done, same division of labor
@@ -1028,10 +1047,16 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     itineraryDays: [],
     showConditionCompletePopup: false,
 
-    acceptConsent: () => {
-      // Roll the per-participant condition order now — the first user-
-      // triggered action, safely client-only (avoids an SSR/hydration
-      // mismatch from randomizing at module-load time).
+    acceptConsent: () => set({ phase: "screening" }),
+
+    submitScreening: (passed) => {
+      if (!passed) {
+        set({ phase: "screening-failed" });
+        return;
+      }
+      // Roll the per-participant condition order now — the first point a
+      // participant is confirmed eligible, safely client-only (avoids an
+      // SSR/hydration mismatch from randomizing at module-load time).
       ensureParticipantId();
       const conditionOrder = shuffleConditionOrder();
       const conditionDestinationMap = shuffleConditionDestinationMap();
