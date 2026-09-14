@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI 여행 플래너",
+  title: "AI 기반 여행 계획 경험 연구",
   description: "AI 기반 여행 일정 계획 경험을 다루는 HCI 연구 프로토타입입니다.",
 };
 
