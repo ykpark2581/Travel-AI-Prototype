@@ -64,9 +64,11 @@ export function ItineraryDayCard({ day }: { day: ItineraryDay }) {
                             </div>
                             <p className="text-xs text-muted-foreground">{item.detail}</p>
                             {item.aiComment && (
-                              <p className="flex items-start gap-1 text-xs text-primary">
+                              <p className="flex items-start gap-1 rounded-md bg-primary/5 px-2 py-1.5 text-xs text-primary">
                                 <Sparkles className="mt-0.5 h-3 w-3 shrink-0" />
-                                <span>{item.aiComment}</span>
+                                <span>
+                                  <span className="font-medium">추천 이유</span> · {item.aiComment}
+                                </span>
                               </p>
                             )}
                           </div>
