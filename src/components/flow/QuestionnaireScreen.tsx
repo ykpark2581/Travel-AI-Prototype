@@ -12,7 +12,7 @@ import {
   rewardSurveyTitle,
 } from "@/data/questionnaire";
 import { useExperimentStore } from "@/lib/store";
-import { submitSurveyRow, type FinalSurveyPayload } from "@/lib/surveySubmission";
+import { submitSurveyRow, type FinalSurveyPayload, type RewardPayload } from "@/lib/surveySubmission";
 
 // Shown once, after all three conditions and their per-condition surveys
 // are done — two steps in this one screen, not two phases (see
@@ -21,8 +21,8 @@ import { submitSurveyRow, type FinalSurveyPayload } from "@/lib/surveySubmission
 // "다음" only advances local state, nothing is submitted yet. Step 2 is the
 // reward/post-interview step (rewardSurveyItems — phone number for the
 // participation gift, optional post-interview consent), and "제출" submits
-// BOTH steps' answers together as one combined final row (see
-// api/survey/route.ts) — this is the last submission of the study, so
+// the final survey row (interview consent included) AND, separately, the
+// phone number to its own reward-contact form (see api/survey/route.ts) — this is the last submission of the study, so
 // there's no later submission to piggyback a retry on if it fails (see
 // surveySubmission.ts) — the thank-you screen shows regardless, since
 // there's nothing more the participant can usefully do either way.
@@ -40,14 +40,29 @@ export function QuestionnaireScreen() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    const payload: FinalSurveyPayload = {
+    const timestamp = new Date().toISOString();
+    // The phone number never goes into the survey-response row — it's split
+    // off and sent to its own Google Form below, linked only by the
+    // participant code (see surveySubmission.ts's RewardPayload).
+    const { phone, ...surveyAnswers } = answers;
+    const finalPayload: FinalSurveyPayload = {
       kind: "final",
       participantCode: participantId,
-      timestamp: new Date().toISOString(),
+      timestamp,
       conditionOrder: conditionOrder.join("-"),
-      answers,
+      answers: surveyAnswers,
     };
-    await submitSurveyRow(payload);
+    const rewardPayload: RewardPayload = {
+      kind: "reward",
+      participantCode: participantId,
+      timestamp,
+      phone: phone ?? "",
+    };
+    // Sequential, not Promise.all — each submitSurveyRow first flushes the
+    // shared retry queue, and two concurrent flushes would resend the same
+    // queued items twice.
+    await submitSurveyRow(finalPayload);
+    await submitSurveyRow(rewardPayload);
     setSubmitted(true);
   };
 

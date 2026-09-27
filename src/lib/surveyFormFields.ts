@@ -95,12 +95,10 @@ export const SURVEY_FORM_ENTRY_IDS = {
   preAiFreq: "entry.682289271",
   preAiTravelFreq: "entry.23303149",
   preAiTrust: "entry.1881472389",
-  // Originally preSurveyItems' own contact — that pre-survey step no longer
-  // exists (see data/questionnaire.ts's preSurveyItems comment). Reused by
-  // QuestionnaireScreen.tsx's reward step instead (rewardSurveyItems' phone
-  // question, posted from api/survey/route.ts's final-row branch) — same
-  // live field, just fed from a different screen now.
-  preContact: "entry.1027892861",
+  // NOT written to any more: the phone number now goes to its own separate
+  // Google Form (see REWARD_FORM_* below) so it never lands in the same
+  // sheet as the survey responses. The main form's PreContact column
+  // (entry.1027892861) is simply left empty for new responses.
   // Originally preSurveyItems' own name field (entry.1921088397) — since
   // this flow never collects a name at all any more, the researcher
   // repurposed that same live Google Form question into
@@ -144,3 +142,19 @@ const REQUIRED_ENTRY_KEYS = [
 export const SURVEY_FORM_CONFIGURED =
   !SURVEY_FORM_ACTION_URL.startsWith("REPLACE_") &&
   REQUIRED_ENTRY_KEYS.every((key) => !SURVEY_FORM_ENTRY_IDS[key].startsWith("REPLACE_"));
+
+// Separate Google Form that holds ONLY the reward-payment contact info —
+// participant code + phone number, nothing else — so the phone number never
+// sits in the same response sheet as the survey answers (see
+// api/survey/route.ts's "reward" branch, QuestionnaireScreen.tsx). The two
+// sheets are linked only by the anonymous participant code. Field IDs read
+// from the form's own public page ("참가자코드" / "휴대번호"); neither field
+// is marked required on the form, so a row can never be rejected for a
+// missing field.
+export const REWARD_FORM_ACTION_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdA5b7Vc8MCeqyZVfIfLcsYSl-JGLtyk-h5VC8SfAvCX-X_tw/formResponse";
+
+export const REWARD_FORM_ENTRY_IDS = {
+  participantCode: "entry.33632009",
+  phone: "entry.390238049",
+} as const;

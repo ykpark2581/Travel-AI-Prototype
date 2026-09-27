@@ -42,11 +42,23 @@ export interface FinalSurveyPayload {
   conditionOrder: string; // e.g. "mixed-human-ai" — order-effect analysis, appended column
   // Keyed by data/questionnaire.ts's finalSurveyItems ids (fs1/fs2/fs3,
   // mapped to Final_satisfaction/Final_satisfaction_reason/
-  // Final_improvement_feedback) PLUS rewardSurveyItems ids
-  // (phone/interview_consent, mapped to the preContact/
-  // preInterviewConsent fields — see api/survey/route.ts) — both steps of
-  // QuestionnaireScreen.tsx submit together as this one combined row.
+  // Final_improvement_feedback) PLUS interview_consent (mapped to the
+  // preInterviewConsent field — see api/survey/route.ts). The phone number
+  // is deliberately NOT part of this payload any more — it's submitted
+  // separately as a RewardPayload (below) to its own Google Form.
   answers: Record<string, string>;
+}
+
+// The phone number for reward payment, sent to its own Google Form together
+// with the participant code (and nothing else) — see surveyFormFields.ts's
+// REWARD_FORM_* and api/survey/route.ts's "reward" branch. Submitted by
+// QuestionnaireScreen.tsx right after the final row, as its own submission
+// so the retry queue treats the two independently.
+export interface RewardPayload {
+  kind: "reward";
+  participantCode: string; // same anonymous code as every survey row — the only link between the two forms
+  timestamp: string;
+  phone: string;
 }
 
 // Submitted once, before the first condition (see PreSurveyScreen.tsx) —
@@ -62,7 +74,7 @@ export interface PreSurveyPayload {
   answers: Record<string, string>;
 }
 
-export type SurveyPayload = ConditionSurveyPayload | FinalSurveyPayload | PreSurveyPayload;
+export type SurveyPayload = ConditionSurveyPayload | FinalSurveyPayload | PreSurveyPayload | RewardPayload;
 
 const QUEUE_KEY = "survey-submission-queue";
 const RETRY_ATTEMPTS = 2;

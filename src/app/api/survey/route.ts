@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { SURVEY_FORM_ACTION_URL, SURVEY_FORM_CONFIGURED, SURVEY_FORM_ENTRY_IDS } from "@/lib/surveyFormFields";
+import {
+  REWARD_FORM_ACTION_URL,
+  REWARD_FORM_ENTRY_IDS,
+  SURVEY_FORM_ACTION_URL,
+  SURVEY_FORM_CONFIGURED,
+  SURVEY_FORM_ENTRY_IDS,
+} from "@/lib/surveyFormFields";
 import { conditionSurveyItems, finalSurveyItems, preSurveyItems } from "@/data/questionnaire";
 
 // Thin server-side proxy to the Google Form collecting survey responses
@@ -9,7 +15,7 @@ import { conditionSurveyItems, finalSurveyItems, preSurveyItems } from "@/data/q
 // target shape means surveySubmission.ts doesn't need to know anything
 // about the form itself.
 type SurveyPayload = {
-  kind: "condition" | "final" | "presurvey";
+  kind: "condition" | "final" | "presurvey" | "reward";
   participantCode: string;
   timestamp: string;
   condition?: string; // condition rows only — becomes the sheet's `type` column
@@ -19,6 +25,7 @@ type SurveyPayload = {
   likedActivityCount?: number; // condition rows only — extra
   likedRestaurantCount?: number; // condition rows only — extra
   answers?: Record<string, string>;
+  phone?: string; // reward rows only — goes to the separate reward form
 };
 
 export async function POST(request: Request) {
@@ -32,6 +39,30 @@ export async function POST(request: Request) {
     payload = await request.json();
   } catch {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
+  }
+
+  // Phone number for reward payment: its own Google Form, holding only the
+  // participant code + phone (see surveyFormFields.ts's REWARD_FORM_*) —
+  // never mixed into the survey-response sheet below.
+  if (payload.kind === "reward") {
+    const rewardParams = new URLSearchParams();
+    rewardParams.set(REWARD_FORM_ENTRY_IDS.participantCode, payload.participantCode);
+    rewardParams.set(REWARD_FORM_ENTRY_IDS.phone, payload.phone ?? "");
+    try {
+      const res = await fetch(REWARD_FORM_ACTION_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: rewardParams.toString(),
+      });
+      if (!res.ok) {
+        console.error("[api/survey] reward form responded with status", res.status);
+        return NextResponse.json({ ok: false, error: "form_error" }, { status: 502 });
+      }
+      return NextResponse.json({ ok: true });
+    } catch (err) {
+      console.error("[api/survey] reward form submission failed", err);
+      return NextResponse.json({ ok: false, error: "network_error" }, { status: 502 });
+    }
   }
 
   const params = new URLSearchParams();
@@ -87,18 +118,15 @@ export async function POST(request: Request) {
   } else {
     // finalSurveyItems is [fs1, fs2, fs3] → Final_satisfaction /
     // _reason / _improvement_feedback.
-    // rewardSurveyItems (phone, interview_consent — see
-    // QuestionnaireScreen.tsx's second step) rides along in this same final
-    // row rather than a separate one, reusing the preContact/
-    // preInterviewConsent fields originally reserved for pre-survey's own
-    // now-removed contact/name questions (see data/questionnaire.ts's
-    // preSurveyItems comment and surveyFormFields.ts's own comment on
-    // preInterviewConsent for how that particular field got repurposed).
+    // interview_consent (rewardSurveyItems, QuestionnaireScreen.tsx's second
+    // step) rides along in this same final row via the preInterviewConsent
+    // field (see surveyFormFields.ts's comment on how that field got
+    // repurposed). The phone number does NOT — it's a separate "reward"
+    // submission to its own form (see the reward branch above).
     const [fs1, fs2, fs3] = finalSurveyItems;
     set("finalSatisfaction", answers[fs1.id]);
     set("finalSatisfactionReason", answers[fs2.id]);
     set("finalImprovementFeedback", answers[fs3.id]);
-    set("preContact", answers.phone);
     set("preInterviewConsent", answers.interview_consent);
   }
 
