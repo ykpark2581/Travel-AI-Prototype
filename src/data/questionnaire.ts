@@ -250,7 +250,7 @@ export const likertScaleSize = 7;
 // (it's the reward, not an interview opt-in) — interview_consent is the
 // only genuinely optional piece here.
 export const rewardSurveyTitle = "보상 및 심층면담 안내";
-export const rewardSurveyDescription = "본 실험을 완료한 참가자에게 2,000원 상당의 모바일 상품권을 지급합니다.";
+export const rewardSurveyDescription = "본 실험을 완료한 참가자에게 2,000원 상당의 커피 모바일 상품권을 지급합니다.";
 
 export const rewardSurveyItems: QuestionnaireItem[] = [
   {
