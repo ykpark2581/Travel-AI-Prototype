@@ -161,30 +161,12 @@ export const preSurveyGroups = [
 ];
 
 // Asked identically right after EACH of the three conditions — condition/
-// destination names never appear in the copy itself. 10 items, index-aligned
-// 1:1 with the form's Q1..Q10 fields (api/survey/route.ts posts
-// conditionSurveyItems[i] to q${i+1} by plain array position, with no
-// per-id lookup — a mismatched count here would silently shift every later
-// answer into the wrong sheet column). This is the researcher's finalized
-// wording/order, confirmed against a live pre-filled-link URL — earlier
-// versions had 8 items (mc3 dropped, dv3/dv5 dropped) or an 11-item draft;
-// mc3 is back (now asked of every condition, not just AI-led, per standard
-// manipulation-check design — see surveyFormFields.ts's q3 comment), a
-// second enjoyment item (dv6) replaces the old dv1 slot's entry ID
-// (518947699 — same entry ID, retitled by the researcher to ask about
-// complexity instead), and dv9 (overall satisfaction) was added last via a
-// brand-new field (entry.266222582, see surveyFormFields.ts's q10) — ids
-// below are this file's own, unrelated to the form's internal question ids.
+// destination names never appear in the copy itself. 9 items: 7 Likert
+// dependent variables, then 2 multiple-choice manipulation checks last.
+// api/survey/route.ts posts each item to its own Google Form field by id
+// (CONDITION_ENTRY_KEYS), so the on-screen order here doesn't have to
+// match the form's own question order.
 export const conditionSurveyItems: QuestionnaireItem[] = [
-  // Manipulation Check — one item per condition, asked of everyone
-  { id: "mc1", type: "likert", question: "이번 여행 계획에서 여러 액티비티와 식당 후보를 내가 직접 살펴보았다." },
-  {
-    id: "mc2",
-    type: "likert",
-    question: "이번 여행 계획에서 어떤 액티비티와 식당을 일정에 포함할지 내가 직접 결정했다.",
-  },
-  { id: "mc3", type: "likert", question: "이번 여행 계획에서 일정에 포함할 액티비티와 식당을 AI가 선정했다." },
-
   // Dependent Variables (Complexity, Enjoyment, Serendipity, Preference Refinement, Perceived Control, Trust, Overall Satisfaction)
   { id: "dv1", type: "likert", question: "이번 여행 계획에서 액티비티와 식당 후보를 살펴보는 데 피로감을 느꼈다." },
   { id: "dv6", type: "likert", question: "이번 여행 계획에서 다양한 액티비티와 식당 후보를 살펴보는 과정이 즐거웠다." },
@@ -197,6 +179,23 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   { id: "dv7", type: "likert", question: "이번 여행 계획 과정에서 내가 원하는 방향으로 계획에 영향을 줄 수 있다고 느꼈다." },
   { id: "dv8", type: "likert", question: "이번 여행 계획에서 AI가 구성한 최종 일정을 신뢰할 수 있다고 느꼈다." },
   { id: "dv9", type: "likert", question: "AI와 함께 여행 계획을 완성해 나가는 이 방식에 전반적으로 만족했다." },
+
+  // Manipulation Check — two multiple-choice items, asked LAST (after every
+  // dependent-variable item) so they can't prime the ratings above. Asked
+  // of every condition. Option text must match the Google Form's
+  // multiple-choice options exactly (see surveyFormFields.ts).
+  {
+    id: "mc_review",
+    type: "choice",
+    question: "이번 여행 계획에서 여러 액티비티와 식당 후보의 정보를 직접 살펴보고 비교하셨나요?",
+    options: ["예", "아니오", "잘 모르겠다"],
+  },
+  {
+    id: "mc_chooser",
+    type: "choice",
+    question: "이번 여행 계획에서 일정에 포함할 액티비티와 식당을 최종적으로 고른 주체는 누구였나요?",
+    options: ["나", "AI", "잘 모르겠다"],
+  },
 ];
 
 // Asked once, at the very end, after all three conditions — unlike every

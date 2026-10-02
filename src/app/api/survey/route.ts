@@ -90,11 +90,22 @@ export async function POST(request: Request) {
 
   const answers = payload.answers ?? {};
   if (payload.kind === "condition") {
-    // Index-aligned with conditionSurveyItems (mc1, mc2, mc3, dv1, dv6,
-    // dv2, dv4, dv7, dv8, dv9) — q1..q10 in that fixed order, one Google
-    // Form field each instead of a single JSON blob.
-    conditionSurveyItems.forEach((item, i) => {
-      set(`q${i + 1}` as keyof typeof SURVEY_FORM_ENTRY_IDS, answers[item.id]);
+    // Keyed by item id, not position — conditionSurveyItems' order (the
+    // manipulation checks come last) is the on-screen order only.
+    const CONDITION_ENTRY_KEYS: Record<string, keyof typeof SURVEY_FORM_ENTRY_IDS> = {
+      dv1: "dv1",
+      dv6: "dv6",
+      dv2: "dv2",
+      dv4: "dv4",
+      dv7: "dv7",
+      dv8: "dv8",
+      dv9: "dv9",
+      mc_review: "mcReview",
+      mc_chooser: "mcChooser",
+    };
+    conditionSurveyItems.forEach((item) => {
+      const entryKey = CONDITION_ENTRY_KEYS[item.id];
+      if (entryKey) set(entryKey, answers[item.id]);
     });
   } else if (payload.kind === "presurvey") {
     // Own dedicated fields, not the Q1..Q8 the condition rows use (see

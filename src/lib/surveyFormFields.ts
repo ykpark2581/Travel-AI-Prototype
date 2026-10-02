@@ -10,7 +10,7 @@ export const SURVEY_FORM_ACTION_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSfJL2hcucJ74eYjljTCWXX7kdNXC_rDlooXU64ShKMaLJgMuA/formResponse";
 
 // Sheet column layout this maps to (see docs/SURVEY_SETUP.md):
-//   ParticipantName | timestamp | type | destination | Q1..Q10 |
+//   ParticipantName | timestamp | type | destination | dv1..dv9, mcReview, mcChooser |
 //   PreAge..PreAiTrust | Final_satisfaction | Final_satisfaction_reason |
 //   Final_improvement_feedback | block | conditionOrder |
 //   likedActivityCount | likedRestaurantCount
@@ -21,25 +21,21 @@ export const SURVEY_FORM_ACTION_URL =
 // what links a participant's 3 condition rows + 1 final row together
 // without identifying them.
 //
-// q1..q10 are index-aligned 1:1 with data/questionnaire.ts's
-// conditionSurveyItems (mc1, mc2, mc3, dv1, dv6, dv2, dv4, dv7, dv8, dv9,
-// in that order) — only filled on condition rows. finalSatisfaction/
-// finalSatisfactionReason/finalImprovementFeedback are index-aligned with
-// finalSurveyItems (fs1, fs2, fs3) — only filled on the final row.
+// Condition-row answers are keyed by data/questionnaire.ts's
+// conditionSurveyItems ids (see api/survey/route.ts's
+// CONDITION_ENTRY_KEYS) — only filled on condition rows. dv1/dv6/dv2/dv4/
+// dv7/dv8/dv9 are the 7 Likert items; mcReview/mcChooser are the two
+// multiple-choice manipulation checks asked last. The three older 7-point
+// manipulation-check scale questions (entry.282647127/1228737351/
+// 1978038477) may still exist on the form but are no longer written to.
+// finalSatisfaction/finalSatisfactionReason/finalImprovementFeedback are
+// index-aligned with finalSurveyItems (fs1, fs2, fs3) — only filled on the
+// final row.
 //
-// This is the researcher's finalized 10-item instrument, confirmed live via
-// a fresh pre-filled-link URL. Earlier this went through an 11 → 8 item
-// pass (mc3/dv3/dv5 dropped), back up to 9 (mc3 re-added — asked of every
-// condition now, not just AI-led, per standard manipulation-check design —
-// via a brand-new field entry.1978038477 — and a second enjoyment item dv6
-// added via entry.1023376503), and now 10: dv9 (overall satisfaction) added
-// via another brand-new field (entry.266222582). entry.518947699 and
-// entry.1476911649 kept their entry IDs from the earlier 8-item pass but
-// were retitled by the researcher to ask about different constructs
-// (dv1/complexity and dv7/perceived-control respectively) — same field, new
-// question text, which Google Forms allows without changing the entry ID.
-// The old q7/q8 (entry.1171806374/entry.1074795925) are gone from the form
-// entirely, not reused here.
+// mcReview/mcChooser are plain multiple-choice questions on the form —
+// their option text must match data/questionnaire.ts exactly (Forms
+// rejects a value that isn't one of the predefined options) and neither is
+// marked required (every other row type leaves them blank).
 //
 // destination now has its own field on the form (entry.227310911, added
 // once destination stopped being fixed per-condition — see
@@ -55,19 +51,15 @@ export const SURVEY_FORM_ENTRY_IDS = {
   timestamp: "entry.1550281067",
   type: "entry.1787919474",
   destination: "entry.227310911",
-  q1: "entry.282647127",
-  q2: "entry.1228737351",
-  q3: "entry.1978038477",
-  q4: "entry.518947699",
-  q5: "entry.1023376503",
-  q6: "entry.1750805791",
-  q7: "entry.413689287",
-  q8: "entry.1476911649",
-  q9: "entry.1524723363",
-  // dv9 (overall satisfaction) — new field, confirmed via a fresh
-  // pre-filled-link URL the researcher generated
-  // (?entry.266222582=1).
-  q10: "entry.266222582",
+  dv1: "entry.518947699",
+  dv6: "entry.1023376503",
+  dv2: "entry.1750805791",
+  dv4: "entry.413689287",
+  dv7: "entry.1476911649",
+  dv8: "entry.1524723363",
+  dv9: "entry.266222582",
+  mcReview: "entry.721049978",
+  mcChooser: "entry.1010717910",
   finalSatisfaction: "entry.442364441",
   finalSatisfactionReason: "entry.1371033330",
   // fs3 (아쉽거나 불편했던 점) — new field, confirmed via a fresh
@@ -124,16 +116,15 @@ const REQUIRED_ENTRY_KEYS = [
   "timestamp",
   "type",
   "destination",
-  "q1",
-  "q2",
-  "q3",
-  "q4",
-  "q5",
-  "q6",
-  "q7",
-  "q8",
-  "q9",
-  "q10",
+  "dv1",
+  "dv6",
+  "dv2",
+  "dv4",
+  "dv7",
+  "dv8",
+  "dv9",
+  "mcReview",
+  "mcChooser",
   "finalSatisfaction",
   "finalSatisfactionReason",
   "finalImprovementFeedback",

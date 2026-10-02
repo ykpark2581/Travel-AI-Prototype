@@ -29,7 +29,7 @@ export interface ConditionSurveyPayload {
   block: number; // 1-indexed position among this participant's 3 conditions
   likedActivityCount: number;
   likedRestaurantCount: number;
-  // Keyed by data/questionnaire.ts's conditionSurveyItems ids (mc1..dv8) —
+  // Keyed by data/questionnaire.ts's conditionSurveyItems ids (dv1..dv9, mc_review, mc_chooser) —
   // mapped to individual Q1..Q8 sheet columns by that array's fixed order
   // (see api/survey/route.ts), not sent as one JSON blob.
   answers: Record<string, string>;
