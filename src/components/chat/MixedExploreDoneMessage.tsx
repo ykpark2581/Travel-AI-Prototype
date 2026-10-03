@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useExperimentStore } from "@/lib/store";
+import { MIXED_INTEREST_LIMIT, countInterests } from "@/lib/interestLimits";
 import {
   activityStageConfirmLabel,
   mixedActivityStageHint,
@@ -18,37 +19,49 @@ import type { MixedExploreDonePayload } from "@/types";
 // components/chat/DaySelectionMessage.tsx and for the same reason — see
 // that component's own comment: `activityStageConfirmed` false shows
 // "액티비티 완료" (see lib/store.ts's confirmActivityStage — switches the
-// workspace to the 식당 tab, gated on ≥2 관심있음/관심없음 marks on
-// activities); true shows "식당 완료" instead (gated on ≥1 mark on
+// workspace to the 식당 tab, gated on 2 관심있음 AND 2 관심없음 marks on
+// activities); true shows "식당 완료" instead (gated on the same 2+2 on
 // restaurants, see lib/store.ts's finishMixedExploring for what happens
 // once it's ready).
 export function MixedExploreDoneMessage({ payload }: { payload: MixedExploreDonePayload }) {
   const confirmActivityStage = useExperimentStore((s) => s.confirmActivityStage);
   const finishMixedExploring = useExperimentStore((s) => s.finishMixedExploring);
-  const interestActivityCount = useExperimentStore((s) => Object.keys(s.interestActivity).length);
-  const interestRestaurantCount = useExperimentStore((s) => Object.keys(s.interestRestaurant).length);
+  const interestActivity = useExperimentStore((s) => s.interestActivity);
+  const interestRestaurant = useExperimentStore((s) => s.interestRestaurant);
+  const activityCounts = countInterests(interestActivity);
+  const restaurantCounts = countInterests(interestRestaurant);
 
   if (payload.confirmed) return null;
 
   if (!payload.activityStageConfirmed) {
-    const ready = interestActivityCount >= 2;
+    const ready =
+      activityCounts.interested >= MIXED_INTEREST_LIMIT && activityCounts.notInterested >= MIXED_INTEREST_LIMIT;
     return (
       <div className="space-y-1.5">
         <Button size="sm" disabled={!ready} onClick={() => confirmActivityStage()}>
           {activityStageConfirmLabel}
         </Button>
-        {!ready && <p className="text-xs text-muted-foreground">{mixedActivityStageHint(interestActivityCount)}</p>}
+        {!ready && (
+          <p className="text-xs text-muted-foreground">
+            {mixedActivityStageHint(activityCounts.interested, activityCounts.notInterested)}
+          </p>
+        )}
       </div>
     );
   }
 
-  const ready = interestRestaurantCount >= 1;
+  const ready =
+    restaurantCounts.interested >= MIXED_INTEREST_LIMIT && restaurantCounts.notInterested >= MIXED_INTEREST_LIMIT;
   return (
     <div className="mt-3 space-y-1.5">
       <Button size="sm" disabled={!ready} onClick={() => finishMixedExploring()}>
         {restaurantStageConfirmLabel}
       </Button>
-      {!ready && <p className="text-xs text-muted-foreground">{mixedRestaurantStageHint}</p>}
+      {!ready && (
+        <p className="text-xs text-muted-foreground">
+          {mixedRestaurantStageHint(restaurantCounts.interested, restaurantCounts.notInterested)}
+        </p>
+      )}
     </div>
   );
 }

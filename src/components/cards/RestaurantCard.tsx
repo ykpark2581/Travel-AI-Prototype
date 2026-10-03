@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useExperimentStore } from "@/lib/store";
+import { useInterestBlocked } from "@/lib/useInterestLimits";
 import { useHoverTracking } from "@/lib/useHoverTracking";
 import { MediaCover } from "@/components/cards/MediaCover";
 import type { Restaurant } from "@/types";
@@ -29,6 +30,7 @@ export function RestaurantCard({
   const toggleDayItem = useExperimentStore((s) => s.toggleDayItem);
   const interest = useExperimentStore((s) => s.interestRestaurant[restaurant.id]);
   const setInterest = useExperimentStore((s) => s.setInterest);
+  const { interestedBlocked, notInterestedBlocked } = useInterestBlocked("restaurants", restaurant.id);
   const openDetail = useExperimentStore((s) => s.openDetail);
   const condition = useExperimentStore((s) => s.condition);
   const autoplayFocusedItemId = useExperimentStore((s) => s.autoplayFocusedItemId);
@@ -119,7 +121,8 @@ export function RestaurantCard({
                 }}
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-colors",
-                  interest === "interested" ? "bg-primary text-primary-foreground" : "bg-background/90 text-muted-foreground"
+                  interest === "interested" ? "bg-primary text-primary-foreground" : "bg-background/90 text-muted-foreground",
+                  interestedBlocked && "cursor-not-allowed opacity-40"
                 )}
               >
                 <ThumbsUp className="h-3.5 w-3.5" />
@@ -134,7 +137,8 @@ export function RestaurantCard({
                   "flex h-7 w-7 items-center justify-center rounded-full shadow-sm transition-colors",
                   interest === "not-interested"
                     ? "bg-destructive text-destructive-foreground"
-                    : "bg-background/90 text-muted-foreground"
+                    : "bg-background/90 text-muted-foreground",
+                  notInterestedBlocked && "cursor-not-allowed opacity-40"
                 )}
               >
                 <ThumbsDown className="h-3.5 w-3.5" />

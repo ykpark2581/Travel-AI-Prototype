@@ -21,6 +21,7 @@ import {
   shuffleConditionOrder,
 } from "@/data/conditions";
 import { getDestinationBundle } from "@/data/destinations";
+import { isInterestBlocked } from "@/lib/interestLimits";
 import * as dialogue from "@/data/dialogue";
 import { generateItinerary, generateItineraryFromDayPlan, ACTIVITY_SLOTS, RESTAURANT_SLOTS } from "@/lib/itinerary";
 import { computePreferenceRank } from "@/lib/preferenceRank";
@@ -1237,18 +1238,17 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     // Mixed-led only — tapping the same interest again clears it (goes back
     // to "no opinion yet") rather than only ever being able to flip between
     // 👍/👎.
+    // Capped at MIXED_INTEREST_LIMIT of each kind per stage (see
+    // lib/interestLimits.ts) — a mark that would go over is ignored, while
+    // clearing one (tapping the same mark again) always works.
     setInterest: (stage, id, interest) =>
       set((state) => {
-        if (stage === "activities") {
-          const next = { ...state.interestActivity };
-          if (next[id] === interest) delete next[id];
-          else next[id] = interest;
-          return { interestActivity: next };
-        }
-        const next = { ...state.interestRestaurant };
+        const current = stage === "activities" ? state.interestActivity : state.interestRestaurant;
+        if (isInterestBlocked(current, id, interest)) return {};
+        const next = { ...current };
         if (next[id] === interest) delete next[id];
         else next[id] = interest;
-        return { interestRestaurant: next };
+        return stage === "activities" ? { interestActivity: next } : { interestRestaurant: next };
       }),
 
     finishMixedExploring,

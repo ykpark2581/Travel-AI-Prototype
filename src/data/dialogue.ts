@@ -120,7 +120,7 @@ export const explorationCollectionComplete = "여행 조건에 맞는 다양한 
 // comment), so there's nothing to "freely switch" between yet at the point
 // this message shows.
 export const mixedExplorationPrompt =
-  "직접 후보들을 둘러보고, '관심있음 👍🏻', '관심없음 👎🏻'을 표시하여 여행 스타일을 알려주세요. 이를 바탕으로 추천 일정을 구성해볼게요.";
+  "직접 후보들을 살펴보고, 가장 끌리는 곳 2개에 '관심있음 👍', 가장 끌리지 않는 곳 2개에 '관심없음 👎'을 표시해 주세요. 이를 바탕으로 여행 스타일을 파악해 추천 일정을 구성해볼게요.";
 // Shared by human-led (components/chat/DaySelectionMessage.tsx) and
 // mixed-led (components/chat/MixedExploreDoneMessage.tsx) — both moved
 // from one "move on" button to two in sequence, since the plain workspace
@@ -144,10 +144,11 @@ export function humanRestaurantStageHint(restaurantCount: number): string {
 // humanActivityStageHint above, not a fixed string, so the count can be
 // shown as it climbs toward 2. Restaurant stage stays a flat ≥1 (see
 // mixedRestaurantStageHint below) — only the activity minimum was raised.
-export function mixedActivityStageHint(interestActivityCount: number): string {
-  return `액티비티 ${interestActivityCount}/2에 '관심있음' 또는 '관심없음'을 표시하면 식당으로 넘어갈 수 있어요.`;
+export function mixedActivityStageHint(interested: number, notInterested: number): string {
+  return `액티비티에서 '관심있음' 2개, '관심없음' 2개를 표시하면 식당으로 넘어갈 수 있어요. (👍 ${interested}/2 · 👎 ${notInterested}/2)`;
+}export function mixedRestaurantStageHint(interested: number, notInterested: number): string {
+  return `식당에서도 '관심있음' 2개, '관심없음' 2개를 표시하면 다음으로 넘어갈 수 있어요. (👍 ${interested}/2 · 👎 ${notInterested}/2)`;
 }
-export const mixedRestaurantStageHint = "식당에 '관심있음' 또는 '관심없음'을 하나 이상 표시하면 다음으로 넘어갈 수 있어요.";
 
 export const mixedInterestedLabel = "관심있음";
 export const mixedNotInterestedLabel = "관심없음";

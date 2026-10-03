@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useExperimentStore } from "@/lib/store";
+import { isInterestBlocked } from "@/lib/interestLimits";
 import { cn } from "@/lib/utils";
 import {
   getActivityAiSummary,
@@ -84,6 +85,12 @@ export function ItemDetailDialog() {
       ? (dayAssignment?.restaurantIds.includes(restaurant.id) ?? false)
       : false;
   const interest = activity ? interestActivity[activity.id] : restaurant ? interestRestaurant[restaurant.id] : undefined;
+  // Mixed-led's 👍/👎 slots are capped per stage (see lib/interestLimits.ts)
+  // — grey out whichever button would be refused so the dialog never closes
+  // as if a mark had been saved when it hadn't.
+  const interestMap = activity ? interestActivity : interestRestaurant;
+  const interestedBlocked = item ? isInterestBlocked(interestMap, item.id, "interested") : false;
+  const notInterestedBlocked = item ? isInterestBlocked(interestMap, item.id, "not-interested") : false;
 
   const trackedIdRef = useRef<{ id: string; stage: ExplorationStage; openedAt: number } | null>(null);
   useEffect(() => {
@@ -250,6 +257,7 @@ export function ItemDetailDialog() {
                       size="sm"
                       variant={interest === "interested" ? "default" : "outline"}
                       className="gap-1.5"
+                      disabled={interestedBlocked}
                       onClick={() => {
                         // Same as the select-button branch above — reflect
                         // the interest first, then close, rather than
@@ -265,6 +273,7 @@ export function ItemDetailDialog() {
                       size="sm"
                       variant={interest === "not-interested" ? "destructive" : "outline"}
                       className="gap-1.5"
+                      disabled={notInterestedBlocked}
                       onClick={() => {
                         setInterest(activity ? "activities" : "restaurants", (activity ?? restaurant)!.id, "not-interested");
                         closeDetail();

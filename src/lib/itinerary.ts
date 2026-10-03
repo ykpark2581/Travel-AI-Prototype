@@ -76,6 +76,45 @@ function day4EveningTailItems(flight: Flight, hotel: Hotel): ItineraryItem[] {
   ];
 }
 
+// Mixed-led's day/slot layout. `activities`/`restaurants` arrive as the
+// final picks (rank order — the participant's 👍 ones first); this decides
+// the ORDER they fill the 8 lunch/dinner slots in, so nothing about the
+// layout depends on which picks were liked:
+//   1. pair each activity with a restaurant in the same area where one is
+//      left (else the next best one), since each slot is an activity + a
+//      meal together;
+//   2. group the pairs by area and run the groups hotel-area first (day 1
+//      starts at the hotel after check-in), then by the best-ranked pair in
+//      each group — consecutive slots stay in the same part of town,
+//      matching the "이동 동선" wording in this condition's AI 코멘트.
+// Deterministic (no randomness), and every pick is kept — it only reorders.
+function arrangeForRoute(
+  activities: Activity[],
+  restaurants: Restaurant[],
+  hotelArea: string
+): { activities: Activity[]; restaurants: Restaurant[] } {
+  const remaining = [...restaurants];
+  const pairs = activities.map((activity, rank) => {
+    const sameArea = remaining.findIndex((res) => res.area === activity.area);
+    const [restaurant] = remaining.splice(sameArea >= 0 ? sameArea : 0, 1);
+    return { activity, restaurant, rank };
+  });
+
+  const groups = new Map<string, typeof pairs>();
+  for (const pair of pairs) {
+    groups.set(pair.activity.area, [...(groups.get(pair.activity.area) ?? []), pair]);
+  }
+  const ordered = [...groups.entries()]
+    .sort(([areaA, pairsA], [areaB, pairsB]) => {
+      if (areaA === hotelArea) return -1;
+      if (areaB === hotelArea) return 1;
+      return pairsA[0].rank - pairsB[0].rank;
+    })
+    .flatMap(([, groupPairs]) => groupPairs);
+
+  return { activities: ordered.map((p) => p.activity), restaurants: ordered.map((p) => p.restaurant) };
+}
+
 // Mixed-led/AI-led only — every activity/restaurant that makes the cut gets
 // a mandatory "why this is here" line (see types/index.ts's
 // ItineraryItem.aiComment): mixed-led explains in terms of the 👍/👎
@@ -117,8 +156,17 @@ export function generateItinerary(
 
   // a[0]/r[0] = day1 점심, a[1]/r[1] = day1 저녁, a[2]/r[2] = day2 점심, ...
   // a[6]/r[6] = day4 점심, a[7]/r[7] = day4 저녁.
-  const a: Activity[] = rankedActivityIds.slice(0, ACTIVITY_SLOTS).map((id) => activityById.get(id)!);
-  const r: Restaurant[] = rankedRestaurantIds.slice(0, RESTAURANT_SLOTS).map((id) => restaurantById.get(id)!);
+  const pickedActivities: Activity[] = rankedActivityIds.slice(0, ACTIVITY_SLOTS).map((id) => activityById.get(id)!);
+  const pickedRestaurants: Restaurant[] = rankedRestaurantIds
+    .slice(0, RESTAURANT_SLOTS)
+    .map((id) => restaurantById.get(id)!);
+  // Mixed-led: the AI also decides which day/slot each pick lands in (see
+  // arrangeForRoute) — otherwise rank order alone would always put the
+  // participant's 👍 picks, which rank first, on day 1. AI-led keeps the
+  // plain rank order, unchanged.
+  const arranged = isMixed ? arrangeForRoute(pickedActivities, pickedRestaurants, hotel.area) : null;
+  const a: Activity[] = arranged ? arranged.activities : pickedActivities;
+  const r: Restaurant[] = arranged ? arranged.restaurants : pickedRestaurants;
 
   // Shared across every activityComment/restaurantComment call below so no
   // two items in this one itinerary ever get the exact same "why this is

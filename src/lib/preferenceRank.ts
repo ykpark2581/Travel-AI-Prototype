@@ -36,31 +36,41 @@ export function computePreferenceRank<T extends ScorableItem>(
   return scored.sort((a, b) => b.score - a.score).map((s) => s.id);
 }
 
-// Mixed-led's fuller version of the ranking above — same 👍/👎 interest +
-// inferred-tag signal, but also weighs rating and (when hotelArea is given)
-// proximity to the hotel, then thins out any one category once it's
-// already claimed MAX_PER_CATEGORY of the slots actually being filled, so
-// the final N doesn't just read as "everything marked 관심있음, in score
-// order" — the AI is meant to visibly compare and select, not relay the
-// 👍 list untouched (see lib/itinerary.ts's generateItinerary, gated on
-// condition === "mixed" so AI-led keeps calling plain computePreferenceRank
-// above, completely unaffected by any of this).
-//
-// Interest still dominates every other factor by a wide margin — an
-// interested item's score floor (INTERESTED_WEIGHT) sits well above an
-// uninterested item's ceiling from rating/nearby/tag alone — so this never
-// invents a reason to drop a clearly-preferred pick just to prove AI
-// involvement; the extra signals only ever decide close calls (ties among
-// several interested items, or which non-interested items fill any
-// remaining slots).
+// Mixed-led's version of the ranking above. The participant marks exactly
+// 2 cards 관심있음 and 2 cards 관심없음 per stage (see lib/interestLimits.ts),
+// and the final plan treats those marks as follows:
+//   1. the 2 liked cards are GUARANTEED a slot, whatever their score — they
+//      also bypass the per-category cap below (though they still count
+//      toward it, so they can't be joined by a full set of same-category
+//      AI picks);
+//   2. the 2 disliked cards are removed from the candidate pool outright
+//      (not just penalized);
+//   3. every remaining slot is filled by the AI from the rest of the pool,
+//      scored on the inferred style tag, rating, and proximity to the hotel
+//      — plus how similar the card is to what the participant liked
+//      (shares its category or a style tag: +SIMILAR_TO_LIKED_WEIGHT) or
+//      disliked (−SIMILAR_TO_DISLIKED_PENALTY), so those slots really do
+//      reflect the participant's taste, matching the "여행 스타일을 파악해"
+//      promise in the chat prompt (data/dialogue.ts's mixedExplorationPrompt);
+//   4. WHICH day/slot each pick lands in is the AI's call too — this
+//      function only decides the set; lib/itinerary.ts lays it out.
+// Returns the liked ids first, then the AI's picks in score order (a caller
+// slicing to `slotCount` gets the final set).
 const RATING_WEIGHT = 1.5; // per rating point above a 4.0 baseline
 const NEARBY_WEIGHT = 1.5;
+const SIMILAR_TO_LIKED_WEIGHT = 2;
+const SIMILAR_TO_DISLIKED_PENALTY = 2;
 const MAX_PER_CATEGORY = 3;
 
 interface MixedScorableItem extends ScorableItem {
   rating: number;
   category: string;
   area?: string;
+}
+
+// Shares a category or at least one style tag with any of `others`.
+function isSimilarToAny<T extends MixedScorableItem>(item: T, others: T[]): boolean {
+  return others.some((o) => o.category === item.category || o.styleTags.some((t) => item.styleTags.includes(t)));
 }
 
 export function computeMixedPreferenceRank<T extends MixedScorableItem>(
@@ -70,41 +80,37 @@ export function computeMixedPreferenceRank<T extends MixedScorableItem>(
   slotCount: number,
   hotelArea?: string
 ): string[] {
-  const scored = items
-    .map((item) => {
-      const tagMatch = selectedTags.length > 0 && item.styleTags.some((t) => selectedTags.includes(t)) ? 1 : 0;
-      const itemInterest = interest?.[item.id];
-      const interestScore =
-        itemInterest === "interested"
-          ? INTERESTED_WEIGHT
-          : itemInterest === "not-interested"
-            ? NOT_INTERESTED_PENALTY
-            : 0;
-      const ratingScore = Math.max(0, item.rating - 4) * RATING_WEIGHT;
-      const nearbyScore = hotelArea && item.area === hotelArea ? NEARBY_WEIGHT : 0;
-      return { item, score: interestScore + TAG_WEIGHT * tagMatch + ratingScore + nearbyScore };
-    })
-    .sort((a, b) => b.score - a.score);
+  const likedItems = items.filter((i) => interest?.[i.id] === "interested");
+  const dislikedItems = items.filter((i) => interest?.[i.id] === "not-interested");
+  const pool = items.filter((i) => !interest?.[i.id]);
 
-  // Greedily fills the first `slotCount` positions respecting the
-  // per-category cap, then appends whatever got deferred for that reason —
-  // still in score order — after. A caller slicing to `slotCount` (see
-  // lib/itinerary.ts) gets a diversified result; slicing to anything else
-  // still gets a sensible full ranking, just without the cap applied past
-  // the window it was computed for.
+  const scoreOf = (item: T) => {
+    const tagMatch = selectedTags.length > 0 && item.styleTags.some((t) => selectedTags.includes(t)) ? 1 : 0;
+    const ratingScore = Math.max(0, item.rating - 4) * RATING_WEIGHT;
+    const nearbyScore = hotelArea && item.area === hotelArea ? NEARBY_WEIGHT : 0;
+    const likedScore = isSimilarToAny(item, likedItems) ? SIMILAR_TO_LIKED_WEIGHT : 0;
+    const dislikedScore = isSimilarToAny(item, dislikedItems) ? -SIMILAR_TO_DISLIKED_PENALTY : 0;
+    return TAG_WEIGHT * tagMatch + ratingScore + nearbyScore + likedScore + dislikedScore;
+  };
+
+  // Liked cards go in unconditionally (best-rated first if there were ever
+  // more of them than slots), bypassing the category cap below.
+  const guaranteed = [...likedItems].sort((x, y) => scoreOf(y) - scoreOf(x)).slice(0, slotCount);
+  const categoryCounts = new Map<string, number>();
+  for (const item of guaranteed) categoryCounts.set(item.category, (categoryCounts.get(item.category) ?? 0) + 1);
+
+  const scored = pool.map((item) => ({ item, score: scoreOf(item) })).sort((a, b) => b.score - a.score);
+
   const ordered: T[] = [];
   const deferred: T[] = [];
-  const categoryCounts = new Map<string, number>();
   for (const { item } of scored) {
     const count = categoryCounts.get(item.category) ?? 0;
-    if (ordered.length < slotCount && count >= MAX_PER_CATEGORY) {
+    if (guaranteed.length + ordered.length < slotCount && count >= MAX_PER_CATEGORY) {
       deferred.push(item);
       continue;
     }
     ordered.push(item);
     categoryCounts.set(item.category, count + 1);
   }
-  ordered.push(...deferred);
-
-  return ordered.map((i) => i.id);
+  return [...guaranteed, ...ordered, ...deferred].map((i) => i.id);
 }
