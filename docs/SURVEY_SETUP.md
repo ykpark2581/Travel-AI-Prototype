@@ -94,7 +94,7 @@ PreAge를 "객관식"으로 설정), 문구가 한 글자라도 다르면 제출
 |---|---|---|---|
 | Final_satisfaction | 세 가지 여행 계획 방식 중 가장 선호하는 방식은 무엇이었나요? (인간주도 유형/인간+AI 혼합 유형/AI주도 유형) | fs1 (`finalSurveyItems`) | 완료 |
 | Final_satisfaction_reason | 위 방식을 가장 선호한 이유는 무엇인가요? | fs2 (`finalSurveyItems`) | 완료 |
-| Final_improvement_feedback | 세 가지 여행 계획 방식을 경험하면서 아쉽거나 불편했던 점이 있었다면 자유롭게 작성해 주세요. | fs3 (`finalSurveyItems`) | 완료 |
+| Final_improvement_feedback | 세 가지 여행 계획 방식을 경험하면서 아쉽거나 불편했던 점이 있었다면, 해당 방식과 그 이유를 자유롭게 작성해 주세요. | fs3 (`finalSurveyItems`) | 완료 |
 | PreContact | 모바일 상품권을 받으실 휴대전화 번호를 입력해 주세요. | phone (`rewardSurveyItems`) | 완료 |
 | PreInterviewConsent | 사후 인터뷰에 참여할 의향이 있으십니까? (예, 참여할 의향이 있습니다./아니요.) | interview_consent (`rewardSurveyItems`) | **폼 수정 필요** |
 

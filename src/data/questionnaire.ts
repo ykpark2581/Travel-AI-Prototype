@@ -220,7 +220,7 @@ export const finalSurveyItems: QuestionnaireItem[] = [
   {
     id: "fs3",
     type: "text",
-    question: "세 가지 여행 계획 방식을 경험하면서 아쉽거나 불편했던 점이 있었다면 자유롭게 작성해 주세요.",
+    question: "세 가지 여행 계획 방식을 경험하면서 아쉽거나 불편했던 점이 있었다면, 해당 방식과 그 이유를 자유롭게 작성해 주세요.",
   },
 ];
 
