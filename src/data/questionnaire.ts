@@ -187,8 +187,12 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   {
     id: "mc_review",
     type: "choice",
-    question: "이번 여행 계획에서 여러 액티비티와 식당 후보를 살펴보고 비교한 주체는 누구였나요?",
-    options: ["나", "AI", "잘 모르겠다"],
+    question: "이번 여행 계획의 액티비티와 식당 후보 선택 단계에서, 본인의 행동에 해당하는 것을 선택해 주세요.",
+    options: [
+      "여러 액티비티와 식당 후보의 정보를 직접 살펴보았다.",
+      "여러 액티비티와 식당 후보의 정보를 직접 살펴보지 않았다.",
+      "잘 모르겠다",
+    ],
   },
   {
     id: "mc_chooser",
