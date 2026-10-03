@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, Compass } from "lucide-react";
 
 // Shown in the workspace whenever there's no interactive catalog to
@@ -16,7 +17,44 @@ import { Check, Compass } from "lucide-react";
 // confirmStyleQuestion) reuses this panel to say the search is already
 // done, so a still-spinning icon there would contradict its own "완료"
 // text.
-export function AiWorkingPanel({ text, spinning = true }: { text: string; spinning?: boolean }) {
+// One site name at a time under the label, swapping every second and
+// looping — conveys "the AI is going through sites" without a checklist
+// line per site. Remounted (via `key` at the call site) whenever the site
+// list changes so it always restarts from the first name.
+function SiteTicker({ sites }: { sites: string[] }) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (sites.length < 2) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % sites.length), 1000);
+    return () => clearInterval(id);
+  }, [sites]);
+  return (
+    <div className="flex h-5 items-center justify-center">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={sites[index]}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+          className="text-xs text-muted-foreground/80"
+        >
+          {sites[index]}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export function AiWorkingPanel({
+  text,
+  spinning = true,
+  sites = [],
+}: {
+  text: string;
+  spinning?: boolean;
+  sites?: string[];
+}) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 py-20 text-center">
       <motion.div
@@ -26,7 +64,10 @@ export function AiWorkingPanel({ text, spinning = true }: { text: string; spinni
       >
         {spinning ? <Compass className="h-5 w-5" /> : <Check className="h-5 w-5" />}
       </motion.div>
-      <p className="max-w-xs text-sm text-muted-foreground">{text}</p>
+      <div className="space-y-1">
+        <p className="max-w-xs text-sm text-muted-foreground">{text}</p>
+        {spinning && sites.length > 0 && <SiteTicker key={sites.join("|")} sites={sites} />}
+      </div>
     </div>
   );
 }

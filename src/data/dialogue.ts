@@ -24,6 +24,12 @@ export function buildInitialPrompt(country: string, city: string): string {
 // PLANNING is specific to runFinalPlanGeneration's checklist, once there's
 // nothing left to browse and the AI is actually assembling the itinerary.
 export const aiWorkingLabelCollecting = "AI가 사이트를 탐색 중입니다.";
+// Shown one at a time (1s each, looping) under aiWorkingLabelCollecting in
+// the work panel (see components/workspace/AiWorkingPanel.tsx) while the
+// "AI is searching" checklists run — stands in for the per-site checklist
+// lines those used to carry.
+export const flightsHotelsSiteNames = ["hotely.com", "sky.com", "airplane.com"];
+export const explorationSiteNames = ["Tripy.com", "activity.com", "tour.com"];
 export const aiWorkingLabelPlanning = "AI가 여행 일정을 계획 중입니다.";
 // AI-led only — shown (with AiWorkingPanel's spinner swapped for a static
 // checkmark, see aiWorkingSpinning) in the brief gap between the candidate
@@ -32,7 +38,7 @@ export const aiWorkingLabelPlanning = "AI가 여행 일정을 계획 중입니�
 // catalog stays deliberately withheld a beat longer. Matches the
 // exploration checklist's own last line word-for-word on purpose — same
 // event, just echoed in the workspace instead of only in chat.
-export const aiWorkingLabelSearchComplete = "액티비티와 식당 검색 완료";
+export const aiWorkingLabelSearchComplete = "액티비티·식당 후보 검색 완료";
 
 // Human-led/mixed-led's version of this beat (AI-led has its own separate,
 // near-identical one — see aiLedFlightsHotelsIntro below) — a short, purely
@@ -48,12 +54,7 @@ export const aiWorkingLabelSearchComplete = "액티비티와 식당 검색 완�
 // nothing to echo yet at this point in the flow.
 export const flightsHotelsCollectingIntro =
   "네, 알겠습니다.\n\n먼저 가능한 항공편과 숙소를 확인해두고, 액티비티와 식당을 정한 뒤 전체 일정과 동선을 고려해 최종 여행 계획을 구성할게요.\n\n우선 항공편과 숙소부터 찾아보겠습니다.";
-export const flightsHotelsCollectingItems = [
-  "hotely.com 사이트 탐색 중",
-  "sky.com 사이트 탐색 중",
-  "airplane.com 사이트 탐색 중",
-  "항공편과 숙소 검색 완료",
-];
+export const flightsHotelsCollectingItems = ["항공편·숙소 확인 중", "항공편·숙소 확인 완료"];
 // Folds what used to be two back-to-back bubbles (flights/hotels wrap-up,
 // then a separate "now let's look at activities/restaurants" lead-in) into
 // one — no participant action happens between them, so per the "같은 맥락
@@ -72,12 +73,7 @@ export const flightsHotelsCollectingItems = [
 export const activityRestaurantStageIntro =
   "이제 액티비티와 식당을 살펴보며 일정을 구체화해볼게요.\n\n후보를 찾기 전에 이번 여행에 대해 간단히 알려주세요.";
 
-export const explorationCollectionChecklistItems = [
-  "Tripy.com 사이트 탐색 중",
-  "activity.com 사이트 탐색 중",
-  "tour.com 사이트 탐색 중",
-  "액티비티와 식당 검색 완료",
-];
+export const explorationCollectionChecklistItems = ["액티비티·식당 후보 검색 중", "액티비티·식당 후보 검색 완료"];
 
 // Sent once the companion + style questions are both answered, right before
 // explorationCollectionChecklistItems runs (see lib/store.ts's
@@ -268,12 +264,7 @@ export function styleTagLabel(tag: TravelStyleTag): string {
 // not a function, for the same reason (no companion to echo yet).
 export const aiLedFlightsHotelsIntro =
   "네, 알겠습니다.\n\n먼저 가능한 항공편과 숙소를 확인하고, 액티비티와 식당을 정한 뒤 전체 일정과 동선을 고려해 최종 여행 계획을 구성할게요.\n\n우선 항공편과 숙소부터 찾아보겠습니다.";
-export const aiLedFlightsHotelsChecklistItems = [
-  "hotely.com 사이트 탐색 중",
-  "sky.com 사이트 탐색 중",
-  "airplane.com 사이트 탐색 중",
-  "항공편 및 숙소 검색 완료",
-];
+export const aiLedFlightsHotelsChecklistItems = ["항공편·숙소 확인 중", "항공편·숙소 확인 완료"];
 
 // AI-led's own copy of explorationCollectionComplete above — names the
 // style pick explicitly ("선호하신 스타일을 고려하여"), unlike the

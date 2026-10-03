@@ -15,6 +15,7 @@ export function BrowserWorkspace() {
   const aiWorking = useExperimentStore((s) => s.aiWorking);
   const aiWorkingLabel = useExperimentStore((s) => s.aiWorkingLabel);
   const aiWorkingSpinning = useExperimentStore((s) => s.aiWorkingSpinning);
+  const aiWorkingSites = useExperimentStore((s) => s.aiWorkingSites);
   const condition = useExperimentStore((s) => s.condition);
   const recordScrollSample = useExperimentStore((s) => s.recordScrollSample);
 
@@ -102,7 +103,7 @@ export function BrowserWorkspace() {
             ) : activeStage === "itinerary" ? (
               <ItineraryPanel loading={isLoadingActive} />
             ) : aiWorking ? (
-              <AiWorkingPanel text={aiWorkingLabel} spinning={aiWorkingSpinning} />
+              <AiWorkingPanel text={aiWorkingLabel} spinning={aiWorkingSpinning} sites={aiWorkingSites} />
             ) : null}
           </motion.div>
         </div>

@@ -217,6 +217,10 @@ interface ExperimentState {
   // search itself has already finished, so a still-spinning icon would
   // contradict the "완료" label sitting right next to it.
   aiWorkingSpinning: boolean;
+  // Site names the work panel cycles through under aiWorkingLabel (see
+  // AiWorkingPanel.tsx) — only set during the "searching" beats (flights/
+  // hotels, activity/restaurant candidates); empty everywhere else.
+  aiWorkingSites: string[];
 
   // AI-led's watch-only browsing sequence (see lib/aiAutoplay.ts,
   // lib/store.ts's runAiAutoplay) — the participant sees the same
@@ -473,7 +477,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     // "AI가 사이트를 탐색 중입니다." before the participant had even read
     // the message explaining that's what's about to happen.
     sendAiMessage(dialogue.flightsHotelsCollectingIntro, () => {
-      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
+      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true, aiWorkingSites: dialogue.flightsHotelsSiteNames });
       postChecklist(dialogue.flightsHotelsCollectingItems, () => {
         set({ aiWorking: false });
         onDone();
@@ -487,7 +491,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // same as runFlightsHotelsCollection is for human-led/mixed-led.
   function runAiLedFlightsHotels(onDone: () => void) {
     sendAiMessage(dialogue.aiLedFlightsHotelsIntro, () => {
-      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
+      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true, aiWorkingSites: dialogue.flightsHotelsSiteNames });
       postChecklist(dialogue.aiLedFlightsHotelsChecklistItems, () => {
         set({ aiWorking: false });
         onDone();
@@ -676,7 +680,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     // is synthesizing the actual itinerary (see this checklist's own
     // items: "선택하신 액티비티·식당 확인 중" etc.), so the workspace should say so
     // rather than still claiming to be searching sites.
-    set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true });
+    set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true, aiWorkingSites: [] });
     postChecklist(dialogue.finalPlanChecklistItems, () => sendFinalPlanMessage());
   }
 
@@ -691,7 +695,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // happened here. Called from finishMixedExploring only.
   function runMixedFinalPlanGeneration() {
     sendAiMessage(dialogue.mixedPreferenceAnalysisIntro, () => {
-      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true });
+      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true, aiWorkingSites: [] });
       postChecklist(dialogue.mixedFinalPlanChecklistItems, () => sendFinalPlanMessage());
     });
   }
@@ -812,7 +816,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     const city = get().destinationBundle.meta.city;
     sendAiMessage(dialogue.explorationCollectionIntro(city), () => {
       enterStage("explore");
-      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true });
+      set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelCollecting, aiWorkingSpinning: true, aiWorkingSites: dialogue.explorationSiteNames });
       postChecklist(dialogue.explorationCollectionChecklistItems, () => {
         if (get().condition === "ai") {
           // Deliberately does NOT reveal the catalog yet (unlike the
@@ -830,6 +834,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
             aiWorking: true,
             aiWorkingLabel: dialogue.aiWorkingLabelSearchComplete,
             aiWorkingSpinning: false,
+            aiWorkingSites: [],
           });
         } else {
           set({ aiWorking: false, loadingStage: "explore" });
@@ -882,7 +887,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
                 const categories = buildAiAutoplayCategories(rankedActivities, rankedRestaurants);
                 runAiAutoplay(categories, () => {
                   sendAiMessage(dialogue.aiLedFinalPlanIntro, () => {
-                    set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true });
+                    set({ aiWorking: true, aiWorkingLabel: dialogue.aiWorkingLabelPlanning, aiWorkingSpinning: true, aiWorkingSites: [] });
                     postChecklist(dialogue.aiLedFinalPlanChecklistItems, () => sendFinalPlanMessage());
                   });
                 });
@@ -937,6 +942,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
       aiWorking: false,
       aiWorkingLabel: dialogue.aiWorkingLabelCollecting,
       aiWorkingSpinning: true,
+      aiWorkingSites: [],
       autoplayFocusedItemId: null,
       autoplayStatusText: null,
       autoplaySkimming: false,
@@ -1035,6 +1041,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
     aiWorking: false,
     aiWorkingLabel: dialogue.aiWorkingLabelCollecting,
     aiWorkingSpinning: true,
+    aiWorkingSites: [],
     autoplayFocusedItemId: null,
     autoplayStatusText: null,
     autoplaySkimming: false,
