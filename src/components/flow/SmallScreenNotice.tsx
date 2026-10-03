@@ -7,10 +7,14 @@
 export function SmallScreenNotice() {
   return (
     <div className="flex h-dvh w-full flex-col items-center justify-center gap-3 bg-muted/30 p-8 text-center lg:hidden">
-      <p className="text-lg font-semibold">노트북(또는 더 큰 화면)에서 진행해주세요</p>
-      <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-        이 실험은 화면 크기가 충분한 노트북·데스크톱 환경에 맞춰 제작되었습니다.
-        태블릿이나 휴대폰에서는 정상적으로 진행할 수 없으니, 노트북으로 다시 접속해 주세요.
+      <p className="text-lg font-semibold">PC나 노트북(또는 더 큰 화면)에서 진행해 주세요.</p>
+      <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+        이 실험은 화면 크기가 충분한 PC·노트북 환경에 맞춰 제작되었습니다. 태블릿이나 휴대폰에서는 정상적으로
+        진행할 수 없으니, PC나 노트북으로 다시 접속해 주세요.
+      </p>
+      <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+        PC나 노트북으로 접속했는데도 이 안내가 보인다면, 브라우저 창을 최대화하고 화면 확대 비율을 100%로 맞춰
+        주세요. (Windows: Ctrl + 0 / Mac: Cmd + 0)
       </p>
     </div>
   );
