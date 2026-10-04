@@ -7,7 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  /* Geist only covers Latin, so the Korean fallbacks matter: without an
+     explicit sans-serif Korean stack, a browser whose default font is a
+     serif (e.g. Windows -> Batang) renders all Korean text in serif. */
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic",
+    "Noto Sans KR", "Noto Sans CJK KR", sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
