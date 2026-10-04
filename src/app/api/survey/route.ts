@@ -107,6 +107,17 @@ export async function POST(request: Request) {
       const entryKey = CONDITION_ENTRY_KEYS[item.id];
       if (entryKey) set(entryKey, answers[item.id]);
     });
+    // mc_chooser was reworded into a new form question with new options. A
+    // participant whose page was loaded before the change still sends the OLD
+    // option text ("나" / "AI"), which the new question would reject — and a
+    // rejected form post drops the entire row. Send those to the old
+    // question instead (kept on the form for exactly this). "잘 모르겠다"
+    // exists on both, so it just goes to the new one.
+    const chooser = answers.mc_chooser;
+    if (chooser === "나" || chooser === "AI") {
+      params.delete(SURVEY_FORM_ENTRY_IDS.mcChooser);
+      set("mcChooserLegacy", chooser);
+    }
   } else if (payload.kind === "presurvey") {
     // Own dedicated fields, not the Q1..Q8 the condition rows use (see
     // surveyFormFields.ts's preAge/etc comment) — each preSurveyItems id

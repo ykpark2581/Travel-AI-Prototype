@@ -197,8 +197,8 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   {
     id: "mc_chooser",
     type: "choice",
-    question: "이번 여행 계획에서 일정에 포함할 액티비티와 식당을 최종적으로 고른 주체는 누구였나요?",
-    options: ["나", "AI", "잘 모르겠다"],
+    question: "이번 여행 계획에서 최종 일정에 포함할 액티비티와 식당은 어떤 방식으로 정해졌나요?",
+    options: ["내가 최종 일정에 넣을 장소를 직접 지정했다", "AI가 최종 일정에 넣을 장소를 선정했다", "잘 모르겠다"],
   },
 ];
 

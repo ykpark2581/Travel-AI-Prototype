@@ -59,7 +59,15 @@ export const SURVEY_FORM_ENTRY_IDS = {
   dv8: "entry.1524723363",
   dv9: "entry.266222582",
   mcReview: "entry.721049978",
-  mcChooser: "entry.1010717910",
+  // 2nd manipulation check, reworded ("...어떤 방식으로 정해졌나요?") — a NEW
+  // question on the form, so a new entry id.
+  mcChooser: "entry.3817408",
+  // The previous wording ("...최종적으로 고른 주체는 누구였나요?": 나/AI/잘
+  // 모르겠다), kept on the form on purpose: a participant whose page was
+  // loaded before the reword still sends those old option strings, which the
+  // new question would reject (see api/survey/route.ts's mc_chooser
+  // routing). Safe to delete once no old pages can still be open.
+  mcChooserLegacy: "entry.1010717910",
   finalSatisfaction: "entry.442364441",
   finalSatisfactionReason: "entry.1371033330",
   // fs3 (아쉽거나 불편했던 점) — new field, confirmed via a fresh
