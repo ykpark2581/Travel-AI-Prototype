@@ -177,7 +177,7 @@ export const conditionSurveyItems: QuestionnaireItem[] = [
   },
   { id: "dv4", type: "likert", question: "다양한 선택지를 살펴보면서 내가 원하는 것을 더욱 분명히 할 수 있었다." },
   { id: "dv7", type: "likert", question: "이번 여행 계획 과정에서 내가 원하는 방향으로 계획에 영향을 줄 수 있다고 느꼈다." },
-  { id: "dv8", type: "likert", question: "이번 여행 계획에서 AI가 구성한 최종 일정을 신뢰할 수 있다고 느꼈다." },
+  { id: "dv8", type: "likert", question: "이번 여행 계획에서 AI 여행 플래너를 신뢰할 수 있다고 느꼈다." },
   { id: "dv9", type: "likert", question: "AI와 함께 여행 계획을 완성해 나가는 이 방식에 전반적으로 만족했다." },
 
   // Manipulation Check — two multiple-choice items, asked LAST (after every
