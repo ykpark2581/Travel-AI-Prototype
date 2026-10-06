@@ -107,17 +107,26 @@ export async function POST(request: Request) {
       const entryKey = CONDITION_ENTRY_KEYS[item.id];
       if (entryKey) set(entryKey, answers[item.id]);
     });
-    // mc_review was reworded the same way (new question, new options). The
-    // old wording's two answers go to the old question for the same reason
-    // as mc_chooser below; "잘 모르겠다" exists on both, so it goes to the
-    // new one.
-    const review = answers.mc_review;
-    if (
-      review === "액티비티와 식당 후보의 정보를 직접 살펴보았다." ||
-      review === "액티비티와 식당 후보의 정보를 직접 살펴보지 않았다."
-    ) {
-      params.delete(SURVEY_FORM_ENTRY_IDS.mcReview);
-      set("mcReviewLegacy", review);
+    // mc_review's options changed twice after launch, and each change was
+    // made IN PLACE on the same form question (its older question was
+    // removed). A participant whose page loaded before a change still sends
+    // the older option text, which the form would reject — dropping the
+    // whole row. Map the older wordings onto the equivalent current option;
+    // anything else unrecognised is left out so the rest of the row is
+    // still saved.
+    const reviewItem = conditionSurveyItems.find((i) => i.id === "mc_review");
+    if (reviewItem && reviewItem.type === "choice") {
+      const [byMe, byAi] = reviewItem.options;
+      const olderWordings: Record<string, string> = {
+        "내가 직접 후보를 탐색하고 비교했다": byMe,
+        "AI가 후보를 탐색하고 비교하는 것을 지켜보았다": byAi,
+        "액티비티와 식당 후보의 정보를 직접 살펴보았다.": byMe,
+      };
+      const review = answers.mc_review;
+      if (review && !reviewItem.options.includes(review)) {
+        params.delete(SURVEY_FORM_ENTRY_IDS.mcReview);
+        if (olderWordings[review]) set("mcReview", olderWordings[review]);
+      }
     }
     // mc_chooser was reworded into a new form question with new options. A
     // participant whose page was loaded before the change still sends the OLD
