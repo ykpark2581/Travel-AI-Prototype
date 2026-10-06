@@ -58,7 +58,15 @@ export const SURVEY_FORM_ENTRY_IDS = {
   dv7: "entry.1476911649",
   dv8: "entry.1524723363",
   dv9: "entry.266222582",
-  mcReview: "entry.721049978",
+  // 1st manipulation check, reworded ("...탐색하고 비교하는 과정은 어떻게
+  // 이루어졌나요?") — a NEW question on the form, so a new entry id.
+  mcReview: "entry.896937964",
+  // The previous wording ("...본인의 행동에 해당하는 것": 직접 살펴보았다/직접
+  // 살펴보지 않았다/잘 모르겠다), kept on the form on purpose: a participant
+  // whose page was loaded before the reword still sends those old option
+  // strings, which the new question would reject (see api/survey/route.ts's
+  // mc_review routing). Safe to delete once no old pages can still be open.
+  mcReviewLegacy: "entry.721049978",
   // 2nd manipulation check, reworded ("...어떤 방식으로 정해졌나요?") — a NEW
   // question on the form, so a new entry id.
   mcChooser: "entry.3817408",

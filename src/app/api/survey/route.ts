@@ -107,6 +107,18 @@ export async function POST(request: Request) {
       const entryKey = CONDITION_ENTRY_KEYS[item.id];
       if (entryKey) set(entryKey, answers[item.id]);
     });
+    // mc_review was reworded the same way (new question, new options). The
+    // old wording's two answers go to the old question for the same reason
+    // as mc_chooser below; "잘 모르겠다" exists on both, so it goes to the
+    // new one.
+    const review = answers.mc_review;
+    if (
+      review === "액티비티와 식당 후보의 정보를 직접 살펴보았다." ||
+      review === "액티비티와 식당 후보의 정보를 직접 살펴보지 않았다."
+    ) {
+      params.delete(SURVEY_FORM_ENTRY_IDS.mcReview);
+      set("mcReviewLegacy", review);
+    }
     // mc_chooser was reworded into a new form question with new options. A
     // participant whose page was loaded before the change still sends the OLD
     // option text ("나" / "AI"), which the new question would reject — and a
