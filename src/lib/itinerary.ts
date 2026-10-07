@@ -262,14 +262,68 @@ export function generateItinerary(
   ];
 }
 
+// Human-led: lays out ONE day's picks (the participant chose which day, and
+// which 2 activities + 2 restaurants go in it; this only decides how they
+// pair up and which pair is 점심 vs 저녁):
+//   1. pair each activity with a restaurant in the same area where possible
+//      (otherwise keep the order they were picked in);
+//   2. the pair in the hotel's area goes first (점심) — after check-in on
+//      day 1 and well before the flight home on day 4; if neither pair is,
+//      the one with the shorter activity goes first, so the longer one gets
+//      the evening.
+// Deterministic. Always returns [lunchPair, dinnerPair]; a slot is undefined
+// only if the day has fewer than 2 picks.
+type DayPair = { activity?: Activity; restaurant?: Restaurant };
+
+function activityMinutes(activity: Activity): number {
+  const hours = Number(activity.duration.match(/(\d+)\s*시간/)?.[1] ?? 0);
+  const minutes = Number(activity.duration.match(/(\d+)\s*분/)?.[1] ?? 0);
+  return hours * 60 + minutes || Number.MAX_SAFE_INTEGER;
+}
+
+function arrangeDayPicks(
+  activities: Activity[],
+  restaurants: Restaurant[],
+  hotelArea: string
+): [DayPair | undefined, DayPair | undefined] {
+  if (activities.length < 2 || restaurants.length < 2) {
+    return [
+      { activity: activities[0], restaurant: restaurants[0] },
+      activities[1] || restaurants[1] ? { activity: activities[1], restaurant: restaurants[1] } : undefined,
+    ];
+  }
+  const [a1, a2] = activities;
+  const [r1, r2] = restaurants;
+  const sameArea = (a: Activity, r: Restaurant) => (a.area === r.area ? 1 : 0);
+  // Keep the picked pairing unless swapping the restaurants matches more areas.
+  const swap = sameArea(a1, r2) + sameArea(a2, r1) > sameArea(a1, r1) + sameArea(a2, r2);
+  const pairs: [DayPair, DayPair] = swap
+    ? [
+        { activity: a1, restaurant: r2 },
+        { activity: a2, restaurant: r1 },
+      ]
+    : [
+        { activity: a1, restaurant: r1 },
+        { activity: a2, restaurant: r2 },
+      ];
+  const atHotel = (p: DayPair) => (p.activity?.area === hotelArea ? 1 : 0) + (p.restaurant?.area === hotelArea ? 1 : 0);
+  const [first, second] = pairs;
+  if (atHotel(second) > atHotel(first)) return [second, first];
+  if (atHotel(second) === atHotel(first) && activityMinutes(second.activity!) < activityMinutes(first.activity!)) {
+    return [second, first];
+  }
+  return [first, second];
+}
+
 // Human-led only, step 2 — builds the itinerary straight from the
 // participant's own Day 1-4 placement (see lib/store.ts's toggleDayItem),
 // instead of generateItinerary's fixed ranked-top-N template. The UI (see
 // components/chat/DaySelectionMessage.tsx) requires at least 2 activities +
 // 2 restaurants per day before "선택 완료" enables, so every day should
 // normally have exactly that; `.slice(0, 2)` defensively caps it at 2 in
-// case more ever end up assigned. The FIRST selected activity/restaurant
-// for a day becomes its 점심 pair, the SECOND becomes its 저녁 pair — same
+// case more ever end up assigned. Which of the day's two
+// activity+restaurant pairs is 점심 and which is 저녁 is the AI's call
+// (arrangeDayPicks), not the order the participant clicked in — same
 // 오전/오후/저녁 template every condition's plan now shares (see
 // generateItinerary above), Day 1's 오전 again being the outbound flight/
 // arrival/체크인 rather than 조식. No aiComment on any item — the
@@ -294,13 +348,16 @@ export function generateItineraryFromDayPlan(bundle: DestinationBundle, dayPlan:
       .filter((r): r is Restaurant => !!r)
       .slice(0, 2);
 
+    // The AI lays out the participant's picks for this day (the day itself
+    // is theirs) — see arrangeDayPicks.
+    const [lunchPair, dinnerPair] = arrangeDayPicks(dayActivities, dayRestaurants, hotel.area);
     const lunch: ItineraryItem[] = [];
-    if (dayActivities[0]) lunch.push(activityItem(dayActivities[0]));
-    if (dayRestaurants[0]) lunch.push(mealItem("점심", dayRestaurants[0]));
+    if (lunchPair?.activity) lunch.push(activityItem(lunchPair.activity));
+    if (lunchPair?.restaurant) lunch.push(mealItem("점심", lunchPair.restaurant));
 
     const dinner: ItineraryItem[] = [];
-    if (dayActivities[1]) dinner.push(activityItem(dayActivities[1]));
-    if (dayRestaurants[1]) dinner.push(mealItem("저녁", dayRestaurants[1]));
+    if (dinnerPair?.activity) dinner.push(activityItem(dinnerPair.activity));
+    if (dinnerPair?.restaurant) dinner.push(mealItem("저녁", dinnerPair.restaurant));
     if (dayNum === 4) dinner.push(...day4EveningTailItems(flight, hotel));
 
     const morning: ItineraryItem[] = dayNum === 1 ? day1MorningItems(meta, flight, hotel) : [hotelBreakfastItem(hotel)];

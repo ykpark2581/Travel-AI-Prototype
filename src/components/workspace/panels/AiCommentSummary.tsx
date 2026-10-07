@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 import { useExperimentStore } from "@/lib/store";
 import * as dialogue from "@/data/dialogue";
 
-// The final itinerary's mandatory wrap-up — one dedicated box at the very
-// bottom of the whole plan. Each condition gets a fixed line (see
+// The final itinerary's mandatory summary — one dedicated box at the very
+// top of the whole plan (above Day 1), shown for every condition. Each condition gets a fixed line (see
 // dialogue.aiCommentSummary{Human,Mixed,Ai}): mixed-led/AI-led's own what
 // the AI actually contributed (preference inference + routing, or ranking +
 // full-plan construction); human-led's is a genuine routing/distance

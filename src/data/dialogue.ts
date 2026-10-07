@@ -167,7 +167,7 @@ export const exploreRestaurantsTabLabel = "식당";
 // (explorationCollectionComplete above already did), same as
 // mixedExplorationPrompt above.
 export const humanExploreIntro =
-  "후보를 직접 둘러보고 여행 일정에 포함하고 싶은 액티비티와 식당을 2개씩 선택해 주세요.\n\n1일차 일정부터 시작할게요.";
+  "후보를 직접 둘러보고 여행 일정에 포함하고 싶은 액티비티와 식당을 2개씩 선택해 주세요. 선택하신 장소는 위치와 소요시간 등을 고려해 일정에 배치하겠습니다.\n\n1일차 일정부터 시작할게요.";
 
 // Human-led only, step 2 — instead of free-browsing then placing items
 // afterward, the AI walks the participant through one day at a time (see
@@ -363,7 +363,7 @@ export const finalPlanMessage =
 export const aiCommentHeading = "AI 코멘트";
 
 export const aiCommentSummaryHuman =
-  "일정을 검토한 결과, 일부 관광지와 식당은 서로 거리가 있어 이동 시간이 예상보다 길어질 수 있습니다.\n같은 지역의 장소를 연달아 방문하도록 순서를 조정하면 이동 부담을 줄이고 여행 시간을 더 효율적으로 활용할 수 있습니다.";
+  "선택하신 액티비티와 식당을 바탕으로 일정을 구성하였습니다. 또한, 선택하신 장소와의 동선을 고려하여 항공편과 숙소를 선정하여 전체 일정의 연결성을 높였습니다.";
 export const aiCommentSummaryMixed =
   "AI가 파악한 여행 선호를 바탕으로 액티비티와 식당을 구성하였습니다.\n또한, 항공편 시간과 숙소 위치를 함께 고려하여 이동 동선을 조정하고 전체 일정의 연결성을 높였습니다.";
 export const aiCommentSummaryAi =

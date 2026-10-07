@@ -34,10 +34,10 @@ export function ItineraryPanel({ loading }: { loading: boolean }) {
         </div>
       ) : (
         <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-3">
+          <AiCommentSummary />
           {itineraryDays.map((day) => (
             <ItineraryDayCard key={day.day} day={day} />
           ))}
-          <AiCommentSummary />
         </motion.div>
       )}
     </div>
