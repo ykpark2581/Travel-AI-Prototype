@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useExperimentStore } from "@/lib/store";
 import { CompanionQuestionMessage } from "@/components/chat/CompanionQuestionMessage";
 import { StyleQuestionMessage } from "@/components/chat/StyleQuestionMessage";
 import { DaySelectionMessage } from "@/components/chat/DaySelectionMessage";
@@ -28,6 +29,7 @@ function renderMessageText(text: string) {
 
 export function ChatMessage({ message, isFirst = false }: { message: ChatMessageType; isFirst?: boolean }) {
   const isUser = message.role === "user";
+  const notifyTypingDone = useExperimentStore((s) => s.notifyTypingDone);
 
   // Only AI replies type themselves out (see TypewriterText) — a user-role
   // bubble represents something the participant already said/picked, so it
@@ -101,7 +103,13 @@ export function ChatMessage({ message, isFirst = false }: { message: ChatMessage
           {isUser || isFirst ? (
             renderMessageText(message.text)
           ) : (
-            <TypewriterText text={message.text} onDone={() => setTypingDone(true)} />
+            <TypewriterText
+              text={message.text}
+              onDone={() => {
+                setTypingDone(true);
+                notifyTypingDone(message.id);
+              }}
+            />
           )}
         </div>
         {/* Interactive payloads (question chips, day picker, etc.) wait for the

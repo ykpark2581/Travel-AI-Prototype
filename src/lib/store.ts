@@ -305,6 +305,9 @@ interface ExperimentState {
   // as ConditionSurveyScreen/completeConditionSurvey below.
   completePreSurvey: () => void;
   acknowledgeIntroduction: () => void;
+  // Called by ChatMessage when a bubble's typewriter text has fully appeared
+  // (see sendAiMessage — it holds each message's follow-up until this).
+  notifyTypingDone: (messageId: string) => void;
   // Sends the fixed prompt currently sitting in ChatInput (see
   // pendingPrompt above) and kicks off exploration.
   sendPendingPrompt: () => void;
@@ -408,19 +411,53 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
   // just the start of a multi-second reveal, those side effects kept
   // popping in while the participant was still watching THIS message type
   // out, reading as the workspace jumping ahead mid-sentence.
+  // Callbacks waiting for a specific message's typewriter to actually finish
+  // (see sendAiMessage / notifyTypingDone). Keyed by message id.
+  const typingWaiters = new Map<string, () => void>();
+
   function sendAiMessage(text: string, after?: () => void, extra?: Partial<ChatMessage>, delayMs?: number) {
     set({ isTyping: true });
     const isFirstMessage = get().messages.length === 0;
     const previousText = get().messages.at(-1)?.text ?? "";
     const delay = delayMs ?? readingDelayMs(previousText);
+    const messageId = extra?.id ?? makeId();
     setTimeout(() => {
       set((state) => ({
-        messages: [...state.messages, { id: makeId(), role: "assistant", text, ...extra }],
+        messages: [...state.messages, { id: messageId, role: "assistant", text, ...extra }],
         isTyping: false,
       }));
       if (!after) return;
       const typingDelay = isFirstMessage ? 0 : typingDurationMs(text);
-      setTimeout(after, typingDelay);
+      if (typingDelay === 0) {
+        setTimeout(after, 0);
+        return;
+      }
+      // `after` runs once the bubble has REALLY finished typing (its
+      // TypewriterText reports back through notifyTypingDone), not after a
+      // timer's worth of estimated typing time. The typing animation is a
+      // chain of ~35ms timers, which a background tab, a busy/slow machine,
+      // or battery saver stretches many times over, while a single long timer
+      // like the old estimate still fires on schedule — so the checklist and
+      // the next message used to appear while this one was still typing out.
+      // Waiting for the real completion can only make the flow later, never
+      // earlier. The guard below is only a safety net in case the bubble never
+      // reports back; it counts time the tab is actually visible, so a tab
+      // left in the background can't trip it.
+      let fired = false;
+      let visibleMs = 0;
+      const fire = () => {
+        if (fired) return;
+        fired = true;
+        typingWaiters.delete(messageId);
+        clearInterval(guard);
+        after();
+      };
+      const guard = setInterval(() => {
+        if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+        visibleMs += 500;
+        if (visibleMs > typingDelay * 3 + 8000) fire();
+      }, 500);
+      typingWaiters.set(messageId, fire);
     }, delay);
   }
 
@@ -1078,6 +1115,7 @@ export const useExperimentStore = create<ExperimentState>((set, get) => {
       });
     },
     completePreSurvey: () => set({ phase: "instructions" }),
+    notifyTypingDone: (messageId) => typingWaiters.get(messageId)?.(),
     // Straight into the chat/workspace screen — see beginPlanningChat for
     // the greeting → fixed-prompt beat that plays out there before
     // anything actually starts.
