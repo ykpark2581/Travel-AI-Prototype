@@ -9,6 +9,6 @@
 //
 // This only affects people who LOAD the page from now on — a session that is
 // already open keeps working and can still submit its responses.
-export const STUDY_CLOSED = true;
+export const STUDY_CLOSED = false;
 
 export const PREVIEW_SHORTCUTS = ["human", "mixed", "ai", "survey"];
